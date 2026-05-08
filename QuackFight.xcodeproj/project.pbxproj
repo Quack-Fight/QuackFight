@@ -6,7 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		D161C2F12FADA42100BCB1C2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D864ED552FAC3DF3008DD18D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D864ED5C2FAC3DF3008DD18D;
+			remoteInfo = QuackFight;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		D161C2ED2FADA42100BCB1C2 /* QuackFightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuackFightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D161C2F62FADA44300BCB1C2 /* QuackFight.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = QuackFight.xctestplan; sourceTree = "<group>"; };
 		D864ED5D2FAC3DF3008DD18D /* QuackFight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuackFight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -21,6 +33,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		D161C2EE2FADA42100BCB1C2 /* QuackFightTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = QuackFightTests;
+			sourceTree = "<group>";
+		};
 		D864ED5F2FAC3DF3008DD18D /* QuackFight */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -32,6 +49,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D161C2EA2FADA42100BCB1C2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D864ED5A2FAC3DF3008DD18D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -45,7 +69,9 @@
 		D864ED542FAC3DF3008DD18D = {
 			isa = PBXGroup;
 			children = (
+				D161C2F62FADA44300BCB1C2 /* QuackFight.xctestplan */,
 				D864ED5F2FAC3DF3008DD18D /* QuackFight */,
+				D161C2EE2FADA42100BCB1C2 /* QuackFightTests */,
 				D864ED5E2FAC3DF3008DD18D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				D864ED5D2FAC3DF3008DD18D /* QuackFight.app */,
+				D161C2ED2FADA42100BCB1C2 /* QuackFightTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,6 +88,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D161C2EC2FADA42100BCB1C2 /* QuackFightTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D161C2F32FADA42100BCB1C2 /* Build configuration list for PBXNativeTarget "QuackFightTests" */;
+			buildPhases = (
+				D161C2E92FADA42100BCB1C2 /* Sources */,
+				D161C2EA2FADA42100BCB1C2 /* Frameworks */,
+				D161C2EB2FADA42100BCB1C2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D161C2F22FADA42100BCB1C2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D161C2EE2FADA42100BCB1C2 /* QuackFightTests */,
+			);
+			name = QuackFightTests;
+			packageProductDependencies = (
+			);
+			productName = QuackFightTests;
+			productReference = D161C2ED2FADA42100BCB1C2 /* QuackFightTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		D864ED5C2FAC3DF3008DD18D /* QuackFight */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D864ED732FAC3DF4008DD18D /* Build configuration list for PBXNativeTarget "QuackFight" */;
@@ -93,6 +143,10 @@
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					D161C2EC2FADA42100BCB1C2 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = D864ED5C2FAC3DF3008DD18D;
+					};
 					D864ED5C2FAC3DF3008DD18D = {
 						CreatedOnToolsVersion = 26.4.1;
 					};
@@ -113,11 +167,19 @@
 			projectRoot = "";
 			targets = (
 				D864ED5C2FAC3DF3008DD18D /* QuackFight */,
+				D161C2EC2FADA42100BCB1C2 /* QuackFightTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D161C2EB2FADA42100BCB1C2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D864ED5B2FAC3DF3008DD18D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -128,6 +190,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D161C2E92FADA42100BCB1C2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D864ED592FAC3DF3008DD18D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -137,7 +206,57 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D161C2F22FADA42100BCB1C2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D864ED5C2FAC3DF3008DD18D /* QuackFight */;
+			targetProxy = D161C2F12FADA42100BCB1C2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		D161C2F42FADA42100BCB1C2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7Z827VAMZB;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = chow.QuackFightTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QuackFight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QuackFight";
+			};
+			name = Debug;
+		};
+		D161C2F52FADA42100BCB1C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7Z827VAMZB;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = chow.QuackFightTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QuackFight.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QuackFight";
+			};
+			name = Release;
+		};
 		D864ED742FAC3DF4008DD18D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -326,6 +445,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D161C2F32FADA42100BCB1C2 /* Build configuration list for PBXNativeTarget "QuackFightTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D161C2F42FADA42100BCB1C2 /* Debug */,
+				D161C2F52FADA42100BCB1C2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D864ED582FAC3DF3008DD18D /* Build configuration list for PBXProject "QuackFight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

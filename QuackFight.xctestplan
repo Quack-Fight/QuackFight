@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "53827C72-5721-45E9-B6A9-6C952B4D5A0F",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:QuackFight.xcodeproj",
+      "identifier" : "D864ED5C2FAC3DF3008DD18D",
+      "name" : "QuackFight"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:QuackFight.xcodeproj",
+        "identifier" : "D161C2EC2FADA42100BCB1C2",
+        "name" : "QuackFightTests"
+      }
+    }
+  ],
+  "version" : 1
+}
