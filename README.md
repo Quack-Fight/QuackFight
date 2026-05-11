@@ -7,24 +7,34 @@ Teman teman bisa update OS nya dulu yeaah (kalo ada)!
 
 ## Menjalankan aplikasi
 - Clone terlebih dahulu github repository <br/>
-``git clone https://github.com/Quack-Fight/QuackFight.git`
+```c
+git clone https://github.com/Quack-Fight/QuackFight.git
+```
 - Buka folder project <br/>
-``cd kecedo``
+```c
+cd QuackFight
+```
 - Selamat mengerjakan!!
 
-## Penggunaan Nama Branch
-Untuk nama branch harus menggunakan standar seperti berikut :
-- ``(nama)-(tipe): (deskripsi)``
-
-contoh : ``nathan-feat/AimingState``
-
-Setiap membuat fitur baru atau memperbaiki fitur harus menggunakan branch baru seperti SOP diatas dan melakukan pull request yaa
+## Development Flow
+1. Jangan lupa untuk selalu rely dan update [Github Projects](https://github.com/orgs/Quack-Fight/projects/2)
+2. Di github project, pilih draft issue yang ingin dikerjakan, lalu bisa diklik titlenya
+    <img width="1512" height="892" alt="image" src="https://github.com/user-attachments/assets/8ffb9890-d3ca-4277-a31a-16eb82a3512d" />
+3. Di bagian kanan bawah, terdapat tombol convert to issue, jangan lupa untuk membuat memilih repo QuackFight
+    <img width="384" height="426" alt="image" src="https://github.com/user-attachments/assets/0b3bc420-454f-44b7-aefc-95fefa027d92" />
+4. Setelah issue berhasil tercreate, maka kita bisa memulai development phase dengan membuat branch dari issue tersebut, dengan klik "Create a branch" di bagian "Development" di kanan bawah issue tersebut.
+    <img width="1512" height="897" alt="image" src="https://github.com/user-attachments/assets/970b95c3-9683-4805-8142-e9915f097d2c" />
+5. Pastikan untuk tidak mengubah nama branch untuk menjaga konsistensi <br>
+6. Selanjutnya, kalian bisa melakukan `git checkout <nama-branch>` untuk memulai development di branch tersebut <br>
+7. Happy Working! <br>
+8. Jika sudah selesai development di issue tersebut, maka bisa melakukan Pull Request dengan source branch adalah branch di issue tersebut, dan target branch adalah ke `staging` <br>
+9. Jika review sudah aman, pastikan merging ke branch staging menggunakan "Squash and Merge" untuk menjaga history repository clean and makes it easier to track or revert changes
 
 ## Cara Commit / Push ke Github untuk Update Progresan
-```c
-- git add .
-- git commit -m "feat: adding AimingState"
-- git push origin nathan-feat/AimingState
+```
+git add .
+git commit -m "feat: adding AimingState"
+git push origin <nama-branch>
 ```
 Harus menggunakan [`conventional commits`](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13)! <br/>
 dengan format ``tipe: deskripsi``
@@ -45,6 +55,13 @@ dengan format ``tipe: deskripsi``
 
 ## Cara Pull / Mengambil Data Terbaru dari Github ke Lokal
 ```c
-- git pull
-- git pull origin (branch) // untuk pull dari branch lain
+git pull
+git pull origin (branch) // untuk pull dari branch lain
 ```
+
+## Cara rebase branch dari target branch
+```c
+git pull --rebase origin <nama-branch>
+git push --force-with-lease
+```
+- Pastikan untuk meresolve semua conflict thoughtfully jika ada.
