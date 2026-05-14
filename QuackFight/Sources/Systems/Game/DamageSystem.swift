@@ -45,10 +45,12 @@ class DamageSystem {
         self.player1 = player1
         self.player2 = player2
 
-        // Reacts to: .throwResolved — subscribe ONCE at init, see doc-block above.
-        EventBus.shared.subscribe(.throwResolved) { [weak self] event in
-            guard let self, case .throwResolved(let hit) = event, hit else { return }
-            self.applyDamage()
+        // Subscribe ONCE at init — see doc-block above for rationale.
+        EventBus.shared.subscribe(to: "throwResolved") { [weak self] event in
+            guard let self = self else { return }
+            if case .throwResolved(let hit) = event, hit {
+                self.applyDamage()
+            }
         }
     }
 
