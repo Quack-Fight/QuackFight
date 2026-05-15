@@ -54,9 +54,29 @@ enum GameConstants {
     // MARK: - Projectile
 
     /// Base impulse scalar multiplied by the normalised power value (0…1).
+    /// Used only if a SpriteKit physics impulse is needed.
     static let baseImpulseStrength: CGFloat = 240.0
 
-    /// Gravity vector applied to the physics world.
+    /// Maximum custom projectile velocity at 100% power.
+    /// Used by PhysicsEngine.calculateVelocity().
+    /// Playtest tuning value.
+    static let maxVelocity: CGFloat = 1200.0
+
+    /// Custom deterministic gravity used by PhysicsEngine trajectory simulation.
+    /// Playtest tuning value.
+    static let gravity: CGFloat = 980.0
+
+    /// Fixed timestep used by PhysicsEngine prediction for deterministic results. jadi sperti fps
+    static let fixedTimeStep: CGFloat = 1.0 / 120.0
+
+    /// Maximum number of predicted trajectory points.
+    static let trajectorySteps: Int = 240
+
+    /// Ground Y limit for ending trajectory prediction.
+    static let groundY: CGFloat = 0.0
+
+    /// Gravity vector applied to the SpriteKit physics world.
+    /// This is separate from the custom deterministic PhysicsEngine gravity.
     static let worldGravity = CGVector(dx: 0, dy: -9.8)
 
     // MARK: - Gyroscope Aiming
