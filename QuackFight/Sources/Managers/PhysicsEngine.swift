@@ -66,4 +66,58 @@ enum PhysicsEngine {
 
         return CGVector(dx: dx, dy: dy)
     }
+    
+    /// Predicts the projectile trajectory using the same deterministic physics model.
+    ///
+    /// The first returned point is always the origin.
+    /// The prediction uses a fixed timestep so the same input always produces the same trajectory.
+    ///
+    /// - Parameters:
+    ///   - angle: Launch angle in radians. Example: 45° = `.pi / 4`.
+    ///   - power: Normalised throw power from 0.0 to 1.0.
+    ///   - origin: Starting position of the projectile.
+    ///   - facing: Horizontal direction. Use `1.0` for right, `-1.0` for left.
+    /// - Returns: A list of predicted positions forming a projectile arc.
+    static func predictTrajectory(
+        angle: Double,
+        power: Double,
+        origin: CGPoint,
+        facing: CGFloat
+    ) -> [CGPoint] {
+        var points: [CGPoint] = []
+        
+        // Start from the projectile spawn position.
+        var position = origin
+        
+        // Use calculateVelocity so trajectory prediction and real throw use the same launch math.
+        var velocity = calculateVelocity(
+            angle: angle,
+            power: power,
+            facing: facing
+        )
+        
+        // Fixed timestep keeps prediction deterministic and consistent across devices.
+        let dt = GameConstants.fixedTimeStep
+        
+        for _ in 0..<GameConstants.trajectorySteps {
+            // The first point must be the origin.
+            points.append(position)
+            
+            // Stop early if the projectile has gone below the ground limit.
+            if position.y < GameConstants.groundY {
+                break
+            }
+            
+            // Apply gravity to vertical velocity.
+            velocity.dy -= GameConstants.gravity * dt
+            
+            // Move position based on current velocity.
+            position.x += velocity.dx * dt
+            position.y += velocity.dy * dt
+        }
+        
+        return points
+    }
+    
+    
 }

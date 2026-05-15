@@ -63,11 +63,11 @@ enum GameConstants {
     /// Playtest tuning value.
     static let gravity: CGFloat = 980.0
 
-    /// Fixed timestep used by PhysicsEngine prediction for deterministic results.
-    static let fixedTimeStep: CGFloat = 1.0 / 60.0
+    /// Fixed timestep used by PhysicsEngine prediction for deterministic results. jadi sperti fps
+    static let fixedTimeStep: CGFloat = 1.0 / 120.0
 
     /// Maximum number of predicted trajectory points.
-    static let trajectorySteps: Int = 120
+    static let trajectorySteps: Int = 240
 
     /// Ground Y limit for ending trajectory prediction.
     static let groundY: CGFloat = 0.0
