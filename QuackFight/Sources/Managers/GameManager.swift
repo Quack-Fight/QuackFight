@@ -32,6 +32,10 @@ final class GameManager {
 
     /// The outcome of the most recently completed match, used by GameOverState.
     var lastOutcome: GameOutcome = .draw
+    
+    /// Konteks tap yang sedang aktif.
+    /// Dipakai TapInputSystem untuk menentukan event tap yang benar.
+    var tapContext: TapContext = .none
 
     // MARK: - Computed Access
 
