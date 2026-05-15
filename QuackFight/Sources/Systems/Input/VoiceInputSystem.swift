@@ -26,6 +26,20 @@ import GameplayKit
  - VoiceInputSystem tidak boleh pindah state langsung dan tidak boleh update UI langsung.
  */
 
+/*
+ Voice Power Feedback Moments
+
+ - Saat PowerState dimulai, UISystem menampilkan overlay singkat "Shout!".
+ - Selama power phase, VoiceInputSystem membaca microphone dan mengubah livePower secara live.
+ - Setiap perubahan livePower mem-post GameEvent.amplitudeUpdated.
+ - UISystem / PowerBarNode memakai amplitudeUpdated untuk mengubah fill power bar secara live.
+ - Warna power bar berubah mengikuti power:
+   low power = hijau, medium power = kuning, high power = merah.
+ - Saat player tap atau timer 5 detik habis, GameEvent.powerLocked dipost.
+ - Setelah power terkunci, power bar boleh diberi flash / pulse singkat sebagai konfirmasi.
+ - VoiceInputSystem tidak menjalankan animasi UI langsung; feedback visual dikerjakan oleh UISystem / PowerBarNode.
+ */
+
 /// Sistem untuk membaca suara dari microphone lalu mengubahnya menjadi power lemparan.
 ///
 /// Penjelasan gampang:

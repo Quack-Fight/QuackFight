@@ -28,6 +28,18 @@ import CoreGraphics
  - GyroscopeSystem tidak boleh pindah state langsung dan tidak boleh update UI langsung.
  */
 
+/*
+ Gyroscope Feedback Moments
+
+ - Saat AimState dimulai, UISystem menampilkan overlay singkat "Tilt to Aim".
+ - Selama aiming, GyroscopeSystem mengubah liveAngle setiap frame berdasarkan tilt HP.
+ - TrajectoryRenderSystem membaca liveAngle dan menggambar ulang arc preview secara live.
+ - Arc preview harus terasa responsif, jadi update dilakukan setiap frame dan tidak dithrottle.
+ - Saat player tap atau timer 5 detik habis, GameEvent.aimLocked dipost.
+ - Setelah aim terkunci, arc preview boleh diberi flash / freeze singkat sebagai konfirmasi.
+ - GyroscopeSystem tidak menjalankan animasi UI langsung; feedback visual dikerjakan oleh TrajectoryRenderSystem / UISystem.
+ */
+
 /// Sistem untuk membaca gyroscope / tilt HP lalu mengubahnya menjadi angle lemparan.
 ///
 /// Penjelasan gampang:
