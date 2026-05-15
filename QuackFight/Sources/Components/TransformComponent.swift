@@ -11,9 +11,11 @@ import CoreGraphics
 
 class TransformComponent: GKComponent {
     var position: CGPoint
+    var rotation: CGFloat
     
-    init(position: CGPoint) {
+    init(position: CGPoint = .zero, rotation: CGFloat = 0.0) {
         self.position = position
+        self.rotation = rotation
         super.init()
     }
     
