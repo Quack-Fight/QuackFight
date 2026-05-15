@@ -5,17 +5,18 @@
 //  Created by Justin Chow on 08/05/26.
 //
 
+import Foundation
 import GameplayKit
-import SpriteKit
+import CoreGraphics
 
 class SpriteComponent: GKComponent {
-    var node: SKSpriteNode?
+    let node: SKSpriteNode
     
-    override init() {
+    init(imageName: String) {
+        self.node = SKSpriteNode(imageNamed: imageName)
         super.init()
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
