@@ -16,6 +16,9 @@ enum GameConstants {
     /// Maximum hit points each player starts with.
     static let maxHP: Int = 100
 
+    /// Total number of player-turns before the match ends on a round cap.
+    static let maxRounds: Int = 20
+
     /// The repeating damage cycle per player turn. After cycle 3, it repeats.
     static let damageCycle: [Int] = [10, 10, 15]
 
