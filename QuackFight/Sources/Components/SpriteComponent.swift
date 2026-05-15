@@ -6,3 +6,18 @@
 //
 
 import Foundation
+import GameplayKit
+import CoreGraphics
+
+class SpriteComponent: GKComponent {
+    let node: SKSpriteNode
+    
+    init(imageName: String) {
+        self.node = SKSpriteNode(imageNamed: imageName)
+        super.init()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
