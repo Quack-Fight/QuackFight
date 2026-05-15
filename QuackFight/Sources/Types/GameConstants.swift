@@ -132,4 +132,7 @@ enum GameConstants {
 
     /// Number of particles in a miss dust poof.
     static let missParticleCount: Int = 8
+    
+    // MARK: - Hit Box
+    static let defaultHitBoxRadius: CGFloat = 20.0
 }

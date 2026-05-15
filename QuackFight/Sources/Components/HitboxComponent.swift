@@ -11,7 +11,7 @@ import CoreGraphics
 class HitboxComponent: GKComponent {
     var radius: CGFloat
     
-    init(radius: CGFloat) {
+    init(radius: CGFloat = GameConstants.defaultHitBoxRadius) {
         self.radius = radius
         super.init()
     }

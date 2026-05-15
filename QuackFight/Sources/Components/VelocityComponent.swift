@@ -11,7 +11,7 @@ import CoreGraphics
 class VelocityComponent: GKComponent {
     var vector: CGVector
     
-    init(vector: CGVector) {
+    init(vector: CGVector = .zero) {
         self.vector = vector
         super.init()
     }
