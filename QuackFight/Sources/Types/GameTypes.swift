@@ -36,6 +36,19 @@ enum InputPhase {
     case locked
 }
 
+// MARK: - Tap Context
+
+/// Konteks tap yang sedang aktif.
+///
+/// Dipakai oleh TapInputSystem untuk menentukan event apa yang harus dipost
+/// saat player menyentuh layar.
+enum TapContext {
+    case none
+    case aiming
+    case power
+    case turnHandoff
+}
+
 // MARK: - Camera
 
 /// All four camera operating modes managed by CameraSystem.

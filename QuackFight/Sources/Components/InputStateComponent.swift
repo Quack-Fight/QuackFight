@@ -7,24 +7,36 @@
 
 import GameplayKit
 
-/// Pure-data component holding the raw input state gathered during a player's turn.
+/// Pure-data component holding the input state gathered during a player's turn.
 ///
-/// - `aimAngle` is written by `GyroscopeSystem` during `AimState`.
-/// - `power` is written by `VoiceInputSystem` during `PowerState`.
-/// - `isLocked` is set to `true` when the player taps to lock the current value early.
+/// - `liveAngle` is updated continuously by `GyroscopeSystem` during `AimState`.
+/// - `lockedAngle` is set when the player taps or the aim timer expires.
+/// - `livePower` is updated continuously by `VoiceInputSystem` during `PowerState`.
+/// - `lockedPower` is set when the player taps or the power timer expires.
+/// - `phase` determines which input system is allowed to write.
 ///
 /// Call `reset()` at the start of every turn to restore defaults.
-///
 class InputStateComponent: GKComponent {
 
-    /// Current aiming angle in radians. Updated by `GyroscopeSystem`.
-    var aimAngle: Double = GameConstants.defaultAimAngle
+    /// Live aiming angle in radians. Updated every frame by `GyroscopeSystem`.
+    var liveAngle: Double = GameConstants.defaultAimAngle
 
-    /// Normalised throw power (0.0 … 1.0). Updated by `VoiceInputSystem`.
-    var power: Double = 0.0
+    /// Final aiming angle in radians. Set when `GameEvent.aimLocked` is handled.
+    var lockedAngle: Double?
 
-    /// Whether the player has tapped to lock the current input value.
-    var isLocked: Bool = false
+    /// Live throw power from microphone input. Updated by `VoiceInputSystem`.
+    var livePower: Double = 0.0
+
+    /// Final throw power. Set when `GameEvent.powerLocked` is handled.
+    var lockedPower: Double?
+
+    /// Current input phase. Used to prevent systems from writing at the wrong time.
+    var phase: InputPhase = .idle
+
+    /// Whether both aim and power have been locked and the throw can execute.
+    var isReadyToThrow: Bool {
+        lockedAngle != nil && lockedPower != nil
+    }
 
     // MARK: - Init
 
@@ -42,8 +54,10 @@ class InputStateComponent: GKComponent {
     /// Fully restore all input fields to their default values.
     /// Called at the beginning of each new turn.
     func reset() {
-        aimAngle = GameConstants.defaultAimAngle
-        power = 0.0
-        isLocked = false
+        liveAngle = GameConstants.defaultAimAngle
+        lockedAngle = nil
+        livePower = 0.0
+        lockedPower = nil
+        phase = .idle
     }
 }
