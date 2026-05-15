@@ -44,10 +44,45 @@ import Foundation
 // background thread (e.g., AVAudioEngine tap in VoiceInputSystem).
 // All SpriteKit and GameplayKit mutations must happen on the main thread.
 
+// MARK: - SubscriptionToken
+
+/// Opaque reference returned by `EventBus.subscribe(_:handler:)`.
+///
+/// Store the token in the subscribing object and pass it to
+/// `EventBus.shared.unsubscribe(_:)` when the subscription is no longer needed.
+///
+/// States store tokens as instance properties and unsubscribe in `willExit(to:)`
+/// so that each turn's event handlers are removed when the state exits, preventing
+/// stale closures from firing in later turns.
+///
+/// ```swift
+/// private var aimToken: SubscriptionToken?
+///
+/// override func didEnter(from previousState: GKState?) {
+///     aimToken = EventBus.shared.subscribe(.aimLockConfirmed) { [weak self] _ in
+///         guard let self else { return }
+///         GameStateMachine.shared.enter(PowerState.self)
+///     }
+/// }
+///
+/// override func willExit(to nextState: GKState) {
+///     if let token = aimToken { EventBus.shared.unsubscribe(token) }
+///     aimToken = nil
+/// }
+/// ```
+final class SubscriptionToken {
+    let id: UUID = UUID()
+    fileprivate init() {}
+}
+
+// MARK: - EventBus
+
 /// Typed publish-subscribe bus for decoupling game systems.
 ///
-/// Systems subscribe once in their `init()`. States post events to trigger
-/// reactions across systems without holding direct references to each other.
+/// Systems subscribe once in their `init()` or `setupSubscriptions()`.
+/// States use token-based subscriptions scoped to their active lifetime.
+/// Publishers call `post(_:)` to deliver events without holding direct
+/// references to subscribers.
 ///
 /// ```swift
 /// // Subscriber (in system init):
@@ -63,10 +98,9 @@ final class EventBus {
 
     static let shared = EventBus()
 
-    // Dictionary keyed on GameEvent.Key → array of handler closures.
-    // An array per key supports multiple independent subscribers (e.g., both
-    // WinCheckSystem and UISystem subscribe to .damageApplied).
-    private var observers: [GameEvent.Key: [(GameEvent) -> Void]] = [:]
+    // Each key maps to an array of (id, handler) pairs so individual
+    // subscriptions can be removed by token without clearing everything.
+    private var observers: [GameEvent.Key: [(id: UUID, handler: (GameEvent) -> Void)]] = [:]
 
     // NSLock guards the observer dictionary so that VoiceInputSystem's
     // background-thread posts don't race with main-thread subscriptions.
@@ -78,11 +112,30 @@ final class EventBus {
 
     /// Register `handler` to be called whenever an event with the given key is posted.
     ///
+    /// - Returns: A `SubscriptionToken` that can be passed to `unsubscribe(_:)` to
+    ///   remove this specific handler. States should store the token and unsubscribe
+    ///   in `willExit(to:)`.
     /// - Always pass `[weak self]` inside `handler` to prevent retain cycles.
-    /// - Call this once, in the subscriber's `init()`.
-    func subscribe(_ key: GameEvent.Key, handler: @escaping (GameEvent) -> Void) {
+    @discardableResult
+    func subscribe(_ key: GameEvent.Key, handler: @escaping (GameEvent) -> Void) -> SubscriptionToken {
+        let token = SubscriptionToken()
         lock.withLock {
-            observers[key, default: []].append(handler)
+            observers[key, default: []].append((id: token.id, handler: handler))
+        }
+        return token
+    }
+
+    // MARK: - Unsubscribe
+
+    /// Remove the specific handler identified by `token`.
+    ///
+    /// Safe to call with a token that has already been removed (no-op).
+    /// Call this in `willExit(to:)` of any `GKState` that subscribed in `didEnter(from:)`.
+    func unsubscribe(_ token: SubscriptionToken) {
+        lock.withLock {
+            for key in observers.keys {
+                observers[key]?.removeAll { $0.id == token.id }
+            }
         }
     }
 
@@ -93,7 +146,7 @@ final class EventBus {
     /// Safe to call from any thread. Handlers are always invoked on the main thread
     /// so that SpriteKit node mutations and GameplayKit state changes stay thread-safe.
     func post(_ event: GameEvent) {
-        let handlers = lock.withLock { observers[event.key] ?? [] }
+        let handlers = lock.withLock { observers[event.key]?.map { $0.handler } ?? [] }
         guard !handlers.isEmpty else { return }
 
         if Thread.isMainThread {
@@ -109,10 +162,9 @@ final class EventBus {
 
     /// Remove all subscriptions. Called by `InitState` at match reset.
     ///
-    /// Systems subscribe in `init()` and are singletons, so after calling this
-    /// each system must call `setupSubscriptions()` to re-register its handlers.
-    /// `GameStateMachine` is responsible for orchestrating that re-setup via
-    /// `InitState.didEnter(_:)`.
+    /// After clearing, every system singleton must call `setupSubscriptions()`
+    /// to re-register its handlers before the new match begins.
+    /// `InitState.didEnter(_:)` is responsible for orchestrating that re-setup.
     func clearAllSubscriptions() {
         lock.withLock {
             observers.removeAll()
