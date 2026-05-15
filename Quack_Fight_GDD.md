@@ -55,7 +55,7 @@ The `GameStateMachine` cycles through these states every turn:
    - **Visual:** A dashed line with an arrowhead indicates trajectory (`TrajectoryRenderSystem`). A screen flash with "Tilt to Aim" auto-dismisses upon entry.
    - **Skip:** Tapping the screen locks the angle immediately.
 4. **`PowerState`**: 
-   - **Duration:** 3.0 seconds. 
+   - **Duration:** 5.0 seconds. 
    - **Input:** Microphone (`AVAudioEngine`). Shouting charges power.
    - **Visual:** A voice meter appears beside the player and scales vertically based on microphone decibels. A screen flash with "Shout!" auto-dismisses upon entry.
    - **Skip:** Tapping the screen locks the power immediately.
@@ -73,15 +73,15 @@ The `GameStateMachine` cycles through these states every turn:
 ---
 
 ## 5. Combat, Weapons & Cycles
-Damage scales based on the current round/cycle managed by `DamageCycleManager`.
+Damage scales based on the current round/cycle managed by `DamageCycleManager`. After the third cycle, it goes back to cycle 1.
 
 - **Cycle 1 & 2:**
   - **Asset:** `BaseBread`
   - **Base Damage:** 10
-- **Cycle 3+:**
+- **Cycle 3:**
   - **Asset:** `BaseToaster`
   - **Base Damage:** 15
-
+  
 ---
 
 ## 6. Skills
@@ -89,7 +89,7 @@ Each player has 3 one-time-use skills. They can be activated during `AimState` o
 
 1. **2x Damage (Asset: `2xSkill`)**
    - Modifies the next attack. Turn continues normally.
-   - **Projectile Asset:** Changes to `Skill1Bread` (if cycle 1-2) or `Skill1Toaster` (if cycle 3+).
+   - **Projectile Asset:** Changes to `Skill1Bread` (if cycle 1-2) or `Skill1Toaster` (if cycle 3).
    - **Animation:** Plays a "fire bread" or "fire toaster" animation from the projectile folder.
    - **Damage:** 20 (2x10) or 30 (2x15) depending on the cycle.
 
