@@ -61,14 +61,23 @@ enum GameConstants {
     /// CMMotionManager update interval (60 Hz).
     static let gyroUpdateInterval: TimeInterval = 1.0 / 60.0
 
-    /// Minimum aim angle in radians (10°).
-    static let minAimAngle: Double = 10.0 * .pi / 180.0
+    /// Minimum aim angle in degrees.
+    static let minAimAngleDegrees: Double = 5.0
 
-    /// Maximum aim angle in radians (80°).
-    static let maxAimAngle: Double = 80.0 * .pi / 180.0
+    /// Maximum aim angle in degrees.
+    static let maxAimAngleDegrees: Double = 85.0
 
-    /// Default aim angle used when gyroscope is unavailable (Simulator).
-    static let defaultAimAngle: Double = 45.0 * .pi / 180.0
+    /// Default aim angle in degrees, used when gyroscope data is unavailable.
+    static let defaultAimAngleDegrees: Double = 45.0
+
+    /// Minimum aim angle in radians.
+    static let minAimAngle: Double = minAimAngleDegrees * .pi / 180.0
+
+    /// Maximum aim angle in radians.
+    static let maxAimAngle: Double = maxAimAngleDegrees * .pi / 180.0
+
+    /// Default aim angle in radians.
+    static let defaultAimAngle: Double = defaultAimAngleDegrees * .pi / 180.0
 
     // MARK: - Microphone Power
 
