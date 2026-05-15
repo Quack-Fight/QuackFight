@@ -63,4 +63,11 @@ class SkillComponent: GKComponent {
     func clearActive() {
         activeSkill = nil
     }
+
+    /// Restore all three skills and clear any active selection.
+    /// Call at match start from `InitState`.
+    func reset() {
+        availableSkills = [.damageMultiplier, .heal, .fixedHit]
+        activeSkill = nil
+    }
 }
