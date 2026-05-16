@@ -2,7 +2,7 @@
 //  PlayerEntity.swift
 //  QuackFight
 //
-//  Created by Justin Chow on 08/05/26.
+//  Created by Nathan Sudiara on 08/05/26.
 //
 
 import GameplayKit

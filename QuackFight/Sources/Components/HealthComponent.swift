@@ -2,7 +2,7 @@
 //  HealthComponent.swift
 //  QuackFight
 //
-//  Created by Justin Chow on 08/05/26.
+//  Created by Nathan Sudiara on 08/05/26.
 //
 
 import GameplayKit
@@ -13,11 +13,11 @@ import GameplayKit
 ///
 /// | Parameter         | Value / Rule                                                          |
 /// |-------------------|-----------------------------------------------------------------------|
-/// | Red flash          | Triggered on damage; duration **0.2 s**; applies to HP bar fill node |
-/// | Green flash        | Triggered on heal;   duration **0.2 s**; applies to HP bar fill node |
-/// | Bar scale driver   | `hpFraction` (0.0 … 1.0) maps linearly to the bar's `xScale`        |
-/// | Overheal guard     | `hp` is clamped to `0 ... maxHP` — heal can never exceed cap         |
-/// | Death trigger      | When `isDead == true`, the `AnimationSystem` queues the death anim   |
+/// | Red flash         | Triggered on damage; duration **0.2 s**; applies to HP bar fill node  |
+/// | Green flash       | Triggered on heal;   duration **0.2 s**; applies to HP bar fill node  |
+/// | Bar scale driver  | `hpFraction` (0.0 … 1.0) maps linearly to the bar's `xScale`          |
+/// | Overheal guard    | `hp` is clamped to `0 ... maxHP` — heal can never exceed cap          |
+/// | Death trigger     | When `isDead == true`, the `AnimationSystem` queues the death anim    |
 ///
 class HealthComponent: GKComponent {
 

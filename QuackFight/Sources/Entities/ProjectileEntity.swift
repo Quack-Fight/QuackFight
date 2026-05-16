@@ -10,23 +10,22 @@ import SpriteKit
 
 class ProjectileEntity: GKEntity {
     
-    init(texture: SKTexture) {
+    init(imageName: String, position: CGPoint, velocity: CGVector, radius: CGFloat) {
         super.init()
         
         // Issue #38: Attach all 4 components
         // SpriteComponent handles the visual node
-        let spriteComponent = SpriteComponent()
-        spriteComponent.node = SKSpriteNode(texture: texture)
+        let spriteComponent = SpriteComponent(imageName: imageName)
         addComponent(spriteComponent)
         
         // TransformComponent handles position/rotation data
-        addComponent(TransformComponent())
+        addComponent(TransformComponent(position: position))
         
         // VelocityComponent handles physics movement data
-        addComponent(VelocityComponent())
+        addComponent(VelocityComponent(vector: velocity))
         
         // HitboxComponent handles collision rects
-        addComponent(HitboxComponent())
+        addComponent(HitboxComponent(radius: radius))
     }
     
     @available(*, unavailable)
