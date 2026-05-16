@@ -86,6 +86,10 @@ final class ThrowResolveState: GKState {
                   !self.resolved
             else { return }
             self.resolved = true
+            
+            // Consume skill separately on a miss per Issue #67 edge case
+            GameManager.shared.activePlayer.component(ofType: SkillComponent.self)?.consumeActive()
+            
             GameStateMachine.shared.enter(TurnHandoffState.self)
         }
 

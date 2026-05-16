@@ -33,6 +33,30 @@ import GameplayKit
 /// entity/component graph, its reference count drops to zero and it deallocates
 /// normally, and the closure becomes a harmless no-op (`self` is `nil`).
 ///
+/// ## GDD Table: Cycle Position × Skill Used
+///
+/// | Cycle Index | Base Dmg | Skill Used         | Expected Damage / Result             |
+/// |-------------|----------|--------------------|--------------------------------------|
+/// | 0 / 1       | 10       | None               | 10 damage                            |
+/// | 2           | 15       | None               | 15 damage                            |
+/// | 0 / 1       | 10       | 2x Damage          | 20 damage                            |
+/// | 2           | 15       | 2x Damage          | 30 damage                            |
+/// | 0 / 1       | 10       | Heal               | Heals self for 10 (Max 100)          |
+/// | 2           | 15       | Heal               | Heals self for 15 (Max 100)          |
+/// | 0 / 1       | 10       | Fixed Hit          | 10 damage (unmissable)               |
+/// | 2           | 15       | Fixed Hit          | 15 damage (unmissable)               |
+///
+/// ## Edge Cases (GDD 10.2)
+///
+/// 1. **Miss with 2x Damage**: The damage multiplier is permanently consumed, but no damage is applied.
+/// 2. **Heal at Max HP**: Skill is consumed, HP clamped to maxHP.
+/// 3. **Cycle Wrapping**: After position 2 (15 dmg), round advances back to position 0 (10 dmg).
+/// 4. **Throw Out-of-Bounds**: Resolves as a miss, no damage applied, active skill consumed.
+/// 5. **Zero HP**: Hit reduces opponent HP to <= 0, triggers KO and transitions to GameOverState.
+///
+/// ## Visual & Audio Feedback
+/// - **Visual**: Red floating damage text above the target (`-10` or `-20` or `-15` or `-30`). Target flashes red briefly.
+/// - **Audio**: Impact / Hit SFX triggers.
 class DamageSystem {
 
     /// Reference to player entities so we can look up HealthComponents.
@@ -56,14 +80,29 @@ class DamageSystem {
 
     /// Look up the opponent's `HealthComponent` and apply the current cycle damage.
     private func applyDamage() {
-        // TODO: Wire up active player tracking + DamageCycleManager
-        // Placeholder logic shows the intended data flow:
-        //
-        // 1. Determine which player is defending (opposite of active player).
-        // 2. Read base damage from DamageCycleManager.currentDamage.
-        // 3. Check if a damageMultiplier skill is active → multiply.
-        // 4. Call defender.component(ofType: HealthComponent.self)?.takeDamage(amount).
-        // 5. Publish .damageApplied(amount:to:) so HUD reacts.
-        // 6. Publish .turnEnded so the state machine advances.
+        let activePlayer = GameManager.shared.activePlayer
+        let opponent = GameManager.shared.opponentPlayer
+        
+        let baseDamage = DamageCycleManager.shared.currentDamage
+        var finalDamage = baseDamage
+        
+        let skillComp = activePlayer.component(ofType: SkillComponent.self)
+        if skillComp?.activeSkill == .damageMultiplier {
+            finalDamage *= 2
+        }
+        
+        // Apply damage to opponent
+        if let healthComp = opponent.component(ofType: HealthComponent.self) {
+            healthComp.takeDamage(finalDamage)
+            
+            // Post event for UI and WinCheckSystem
+            EventBus.shared.post(.damageApplied(amount: finalDamage, to: GameManager.shared.nextPlayerIndex))
+        }
+        
+        // Consume the skill permanently
+        skillComp?.consumeActive()
+        
+        // Notify state machine
+        EventBus.shared.post(.turnEnded)
     }
 }

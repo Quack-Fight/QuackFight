@@ -19,6 +19,10 @@ import Foundation
 /// 4. Call `SkillComponent.consumeActive()` to permanently use the skill.
 /// 5. Post `.healApplied(amount:to:)` and `.hpChanged(playerIndex:hp:)`.
 /// 6. Post `.turnEnded` to signal the round is complete.
+///
+/// ## Visual & Audio Feedback (#75)
+/// - **Visual**: Green HP bar pulse. Target flashes green.
+/// - **Audio**: Heal SFX triggers.
 final class HealSystem {
 
     static let shared = HealSystem()
@@ -28,8 +32,20 @@ final class HealSystem {
 
     /// Apply the current cycle's damage value as healing to the active player.
     func applyHeal() {
-        // TODO: Implement heal logic per the doc block above.
-        // Stubbed so HealResolveState can compile and wire the event flow.
+        let activePlayer = GameManager.shared.activePlayer
+        let healAmount = DamageCycleManager.shared.currentDamage
+        
+        // Apply heal
+        if let healthComp = activePlayer.component(ofType: HealthComponent.self) {
+            healthComp.heal(healAmount)
+            EventBus.shared.post(.healApplied(amount: healAmount, to: GameManager.shared.activePlayerIndex))
+        }
+        
+        // Consume the skill permanently
+        activePlayer.component(ofType: SkillComponent.self)?.consumeActive()
+        
+        // Notify state machine
+        EventBus.shared.post(.turnEnded)
     }
 
     // MARK: - System Lifecycle

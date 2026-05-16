@@ -21,6 +21,10 @@ import Foundation
 /// 6. Post `.turnEnded` to signal the round is complete.
 ///    `WinCheckSystem` will also receive `.damageApplied` and post `.gameOver`
 ///    if the opponent's HP reached 0 — that event is routed by `FixedHitResolveState`.
+///
+/// ## Visual & Audio Feedback (#75)
+/// - **Visual**: Orange "FIXED HIT" label. Target flashes red.
+/// - **Audio**: Missile Explosion SFX triggers on impact.
 final class FixedHitSystem {
 
     static let shared = FixedHitSystem()
@@ -30,8 +34,23 @@ final class FixedHitSystem {
 
     /// Apply the current cycle's damage value to the opponent (guaranteed, no throw).
     func applyFixedHit() {
-        // TODO: Implement fixed-hit logic per the doc block above.
-        // Stubbed so FixedHitResolveState can compile and wire the event flow.
+        let activePlayer = GameManager.shared.activePlayer
+        let opponent = GameManager.shared.opponentPlayer
+        let fixedDamage = DamageCycleManager.shared.currentDamage
+        
+        // Apply damage to opponent
+        if let healthComp = opponent.component(ofType: HealthComponent.self) {
+            healthComp.takeDamage(fixedDamage)
+            
+            // Post event for UI and WinCheckSystem
+            EventBus.shared.post(.damageApplied(amount: fixedDamage, to: GameManager.shared.nextPlayerIndex))
+        }
+        
+        // Consume the skill permanently
+        activePlayer.component(ofType: SkillComponent.self)?.consumeActive()
+        
+        // Notify state machine
+        EventBus.shared.post(.turnEnded)
     }
 
     // MARK: - System Lifecycle
