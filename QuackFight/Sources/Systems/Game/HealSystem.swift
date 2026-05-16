@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameplayKit
 
 /// Applies a heal to the active player when the Heal skill is used.
 ///

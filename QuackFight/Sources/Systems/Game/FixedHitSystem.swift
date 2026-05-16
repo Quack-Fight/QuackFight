@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameplayKit
 
 /// Applies a guaranteed fixed-damage hit to the opponent when the Fixed Hit skill is used.
 ///
