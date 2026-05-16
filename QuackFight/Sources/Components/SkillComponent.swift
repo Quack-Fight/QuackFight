@@ -44,18 +44,17 @@ class SkillComponent: GKComponent {
     }
 
     /// Attempt to activate a skill. Returns `true` on success, `false` if already used.
+    /// The skill is immediately removed from `availableSkills` upon activation.
     @discardableResult
     func activate(_ skill: SkillType) -> Bool {
         guard availableSkills.contains(skill) else { return false }
         activeSkill = skill
+        availableSkills.remove(skill)
         return true
     }
 
-    /// Permanently consume the currently active skill.
-    /// Removes it from `availableSkills` and sets `activeSkill` to `nil`.
+    /// Clears the currently active skill at the end of the turn.
     func consumeActive() {
-        guard let skill = activeSkill else { return }
-        availableSkills.remove(skill)
         activeSkill = nil
     }
 
