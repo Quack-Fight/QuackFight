@@ -7,15 +7,26 @@
 
 import GameplayKit
 
-// MARK: - Entry / Exit Feedback (#27)
+// MARK: - Entry / Exit Feedback (#27, #61, #66)
 //
+// Throw Resolution Rules (#61):
+// - Hit: Damage is applied to the opponent, and the DamageCycle advances.
+// - Miss: No damage is applied, but the DamageCycle still advances. Any active
+//         skill (like damageMultiplier) is still permanently consumed.
+// - Out of Bounds: The projectile hitting the left, right, or bottom boundaries
+//                  is considered a miss.
+//
+// Feedback Moments (#66):
 // didEnter  → Bread projectile spawns at activePlayer.throwOrigin.
 //             Camera switches to .followBread mode (tracks the projectile in flight).
-//             Throw SFX plays.
-// On hit    → Hit SFX plays. Camera shake. Damage text floats above the target.
+//             Throw SFX triggers (AudioManager).
+// On hit    → Impact SFX triggers. Camera shakes. Damage text floats above the target.
 //             Target flashes red (0.2 s, HP bar fill node).
-// On miss   → Miss SFX / dust poof at the landing point.
-//             Camera returns to .staticOnPlayer(index: activePlayer).
+//             `BreadImpact` particles spawn at the collision point.
+//             Camera returns to active player.
+// On miss   → Miss SFX triggers.
+//             `BreadMiss` crumb puff particles spawn at the landing point.
+//             Camera returns to active player.
 // willExit  → Projectile node is removed from the scene.
 
 /// Handles the bread projectile's flight and routes on the outcome.
@@ -98,7 +109,11 @@ final class ThrowResolveState: GKState {
             GameStateMachine.shared.enter(GameOverState.self)
         }
 
-        ThrowSystem.shared.executeThrow()
+        if let scene = GameManager.shared.scene {
+            ThrowSystem.shared.executeThrow(player: GameManager.shared.activePlayer, scene: scene)
+        } else {
+            print("Warning: GameManager.shared.scene is nil; cannot execute throw.")
+        }
     }
 
     // MARK: - Exit
@@ -110,5 +125,9 @@ final class ThrowResolveState: GKState {
         throwToken = nil
         turnEndedToken = nil
         gameOverToken = nil
+        
+        if let scene = GameManager.shared.scene {
+            ThrowSystem.shared.clearBread(scene: scene)
+        }
     }
 }

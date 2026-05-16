@@ -24,6 +24,9 @@ final class GameManager {
 
     // MARK: - State
 
+    /// Reference to the active GameScene to allow systems to add/remove nodes.
+    weak var scene: GameScene?
+
     /// The two player entities in turn order: index 0 = Player 1, index 1 = Player 2.
     private var players: [PlayerEntity] = []
 
@@ -60,10 +63,11 @@ final class GameManager {
 
     // MARK: - Registration
 
-    /// Store references to both player entities.
+    /// Store references to both player entities and the scene.
     /// Call exactly once from `GameScene.didMove(to:)` after entities are created.
-    func registerPlayers(_ p1: PlayerEntity, _ p2: PlayerEntity) {
+    func registerPlayers(_ p1: PlayerEntity, _ p2: PlayerEntity, scene: GameScene) {
         players = [p1, p2]
+        self.scene = scene
         activePlayerIndex = 0
     }
 

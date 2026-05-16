@@ -99,6 +99,11 @@ class GameScene: SKScene {
         // Calculate time since last update
         let dt = currentTime - self.lastUpdateTime
         
+        // Update state machine and systems
+        GameStateMachine.shared.update(deltaTime: dt)
+        PhysicsSystem.shared.update(deltaTime: dt)
+        HitDetectionSystem.shared.update(deltaTime: dt)
+        
         // Update entities
         for entity in self.entities {
             entity.update(deltaTime: dt)
