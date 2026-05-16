@@ -54,16 +54,10 @@ class InputStateComponent: GKComponent {
     /// Fully restore all input fields to their default values.
     /// Called at the beginning of each new turn.
     func reset() {
-<<<<<<< HEAD
         liveAngle = GameConstants.defaultAimAngle
         lockedAngle = nil
         livePower = 0.0
         lockedPower = nil
         phase = .idle
-=======
-        aimAngle = GameConstants.defaultAimAngle
-        power = 0.0
-        isLocked = false
->>>>>>> 6838055 (feat: Implement core ECS foundation and components (#30, #34, #39, #68))
     }
 }
