@@ -106,4 +106,20 @@ class GameScene: SKScene {
         
         self.lastUpdateTime = currentTime
     }
+    
+    // MARK: - ECS Management
+    
+    /// Registers an entity with the scene so it receives `update(deltaTime:)` calls.
+    func registerEntity(_ entity: GKEntity) {
+        if !entities.contains(entity) {
+            entities.append(entity)
+        }
+    }
+    
+    /// Removes an entity from the scene's update loop.
+    func removeEntity(_ entity: GKEntity) {
+        if let index = entities.firstIndex(of: entity) {
+            entities.remove(at: index)
+        }
+    }
 }

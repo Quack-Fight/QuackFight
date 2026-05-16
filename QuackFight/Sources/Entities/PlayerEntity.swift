@@ -38,13 +38,20 @@ class PlayerEntity: GKEntity {
 
     // MARK: - Init
 
-    init(playerIndex: PlayerIndex) {
+    init(playerIndex: PlayerIndex, scene: GameScene) {
         self.playerIndex = playerIndex
         super.init()
+
+        // Set origin based on GameConstants layout
+        let xPos = playerIndex == 0 ? GameConstants.playerXInset : (scene.size.width - GameConstants.playerXInset)
+        let yPos = playerIndex == 0 ? GameConstants.player1YPosition : GameConstants.player2YPosition
+        self.throwOrigin = CGPoint(x: xPos, y: yPos)
 
         addComponent(HealthComponent())
         addComponent(SkillComponent())
         addComponent(InputStateComponent())
+        
+        scene.registerEntity(self)
     }
 
     @available(*, unavailable)
