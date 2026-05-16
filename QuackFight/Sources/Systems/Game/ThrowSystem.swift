@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameplayKit
 
 /// Executes a bread-projectile throw for the active player.
 ///
@@ -24,13 +25,54 @@ final class ThrowSystem {
     static let shared = ThrowSystem()
     private init() {}
 
+    // MARK: - State
+
+    var activeBread: ProjectileEntity?
+    var isInFlight: Bool = false
+
     // MARK: - Execute
 
     /// Spawn the projectile and run the throw sequence.
     /// Posts `.throwStarted`, then `.throwResolved(hit:)` when the projectile lands.
-    func executeThrow() {
-        // TODO: Implement projectile spawn, physics integration, hit detection.
-        // Stubbed so ThrowResolveState can compile and wire the event flow.
+    func executeThrow(player: PlayerEntity, scene: GameScene) {
+        let input = player.component(ofType: InputStateComponent.self)
+        let angle = input?.lockedAngle ?? GameConstants.defaultAimAngle
+        let power = input?.lockedPower ?? 0.5
+        
+        let facing = player.facing
+        let velocity = PhysicsEngine.calculateVelocity(angle: angle, power: power, facing: facing)
+        
+        // Determine projectile image
+        let activeSkill = player.component(ofType: SkillComponent.self)?.activeSkill
+        let cyclePos = DamageCycleManager.shared.position
+        
+        let imageName: String
+        if activeSkill == .damageMultiplier {
+            imageName = (cyclePos == 2) ? "Skill1Toaster" : "Skill1Bread"
+        } else {
+            imageName = (cyclePos == 2) ? "BaseToaster" : "BaseBread"
+        }
+        
+        // Create and setup the projectile
+        let projectile = ProjectileEntity(
+            imageName: imageName,
+            position: player.throwOrigin,
+            velocity: velocity,
+            radius: GameConstants.defaultHitBoxRadius
+        )
+        
+        projectile.addToScene(scene)
+        self.activeBread = projectile
+        self.isInFlight = true
+        
+        EventBus.shared.post(.throwStarted)
+    }
+    
+    /// Removes the bread and nils the reference.
+    func clearBread(scene: GameScene) {
+        activeBread?.removeFromScene(scene)
+        activeBread = nil
+        isInFlight = false
     }
 
     // MARK: - System Lifecycle
