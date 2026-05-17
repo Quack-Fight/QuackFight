@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameplayKit
 import CoreGraphics
 import SpriteKit
 
@@ -61,19 +62,18 @@ final class CameraSystem {
         
         switch cameraComp.state {
         case .staticOnPlayer(let index):
-            if let player = GameManager.shared.player(index: index) {
-                cameraNode.position = player.position
-            }
+            let player = GameManager.shared.player(index: index)
+            cameraNode.position = player.throwOrigin
             
         case .previewPan:
-            guard let p1 = GameManager.shared.player(index: 0),
-                  let p2 = GameManager.shared.player(index: 1) else { return }
+            let p1 = GameManager.shared.player(index: 0)
+            let p2 = GameManager.shared.player(index: 1)
             
             panProgress += deltaTime
             let t = min(CGFloat(panProgress / previewPanDuration), 1.0)
             
             // Lerp from P2 to P1
-            cameraNode.position = CGPoint.lerp(from: p2.position, to: p1.position, t: t)
+            cameraNode.position = CGPoint.lerp(from: p2.throwOrigin, to: p1.throwOrigin, t: t)
             
             if t >= 1.0 {
                 // Prevent multiple event posts
@@ -84,15 +84,15 @@ final class CameraSystem {
             
         case .followBread:
             // Find active projectile entity
-            if let activeBread = ThrowSystem.shared.activeBread {
-                let targetPos = activeBread.position
+            if let activeBread = ThrowSystem.shared.activeBread,
+               let targetPos = activeBread.component(ofType: TransformComponent.self)?.position {
                 cameraNode.position = CGPoint.lerp(from: cameraNode.position, to: targetPos, t: cameraFollowLerp)
             }
             
         case .returnToPlayer(let index):
-            guard let player = GameManager.shared.player(index: index) else { return }
+            let player = GameManager.shared.player(index: index)
             
-            let targetPos = player.position
+            let targetPos = player.throwOrigin
             cameraNode.position = CGPoint.lerp(from: cameraNode.position, to: targetPos, t: cameraReturnLerp)
             
             // When close enough, snap and complete
