@@ -103,6 +103,7 @@ class GameScene: SKScene {
         GameStateMachine.shared.update(deltaTime: dt)
         PhysicsSystem.shared.update(deltaTime: dt)
         HitDetectionSystem.shared.update(deltaTime: dt)
+        CameraSystem.shared.update(deltaTime: dt)
         
         // Update entities
         for entity in self.entities {
