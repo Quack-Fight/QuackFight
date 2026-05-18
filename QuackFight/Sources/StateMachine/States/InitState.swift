@@ -58,7 +58,7 @@ final class InitState: GKState {
         //    ThrowSystem.shared.setupSubscriptions()
         //    HealSystem.shared.setupSubscriptions()
         //    FixedHitSystem.shared.setupSubscriptions()
-        //    WinCheckSystem.shared.setupSubscriptions()
+        WinCheckSystem.shared.setupSubscriptions()
         //    UISystem.shared.setupSubscriptions()
         //    CameraSystem.shared.setupSubscriptions()
 

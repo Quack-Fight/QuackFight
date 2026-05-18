@@ -41,7 +41,7 @@ final class HealResolveState: GKState {
     override func didEnter(from previousState: GKState?) {
         // Subscribe before applying the heal to guarantee no event is missed.
         healToken = EventBus.shared.subscribe(.healApplied) { [weak self] _ in
-            guard let self else { return }
+            guard self != nil else { return }
             GameStateMachine.shared.enter(TurnHandoffState.self)
         }
 

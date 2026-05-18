@@ -67,7 +67,7 @@ final class SkillSelectState: GKState {
         }
 
         skipToken = EventBus.shared.subscribe(.skillSkipped) { [weak self] _ in
-            guard let self else { return }
+            guard self != nil else { return }
             GameStateMachine.shared.enter(AimState.self)
         }
     }
