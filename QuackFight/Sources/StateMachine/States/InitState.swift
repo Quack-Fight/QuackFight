@@ -59,7 +59,7 @@ final class InitState: GKState {
         //    HealSystem.shared.setupSubscriptions()
         //    FixedHitSystem.shared.setupSubscriptions()
         WinCheckSystem.shared.setupSubscriptions()
-        //    UISystem.shared.setupSubscriptions()
+        UISystem.shared.setupSubscriptions()
         //    CameraSystem.shared.setupSubscriptions()
 
         // 5. Branch: first match shows Round 1 camera preview pan; rematches skip it.

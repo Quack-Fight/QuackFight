@@ -50,5 +50,6 @@ final class RoundCounterManager {
     /// Reset to zero. Called by `InitState` at the start of each match.
     func reset() {
         turnsElapsed = 0
+        EventBus.shared.post(.roundCountUpdated(turn: 1, max: maxTurns))
     }
 }

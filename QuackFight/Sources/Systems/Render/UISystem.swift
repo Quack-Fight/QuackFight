@@ -29,7 +29,7 @@ final class UISystem {
         setupSubscriptions()
     }
     
-    private func setupSubscriptions() {
+    func setupSubscriptions() {
         EventBus.shared.subscribe(.hpChanged) { [weak self] event in
             guard let self, case .hpChanged(let playerIndex, let hp) = event else { return }
             self.hudNode?.updateHP(playerIndex: playerIndex, current: hp, max: GameConstants.maxHP)

@@ -17,7 +17,7 @@ class GameViewController: UIViewController {
         if let view = self.view as? SKView {
             // Attempt to load 'GameScene.sks' as a GKScene
             if let scene = GKScene(fileNamed: "GameScene"), let sceneNode = scene.rootNode as? GameScene {
-                // Copy gameplay related content over to the scene
+                // Copy gameplay relatedx content over to the scene
                 sceneNode.entities = scene.entities
                 sceneNode.graphs = scene.graphs
                 sceneNode.scaleMode = .aspectFill

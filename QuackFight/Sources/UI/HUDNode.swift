@@ -14,6 +14,7 @@ class HUDNode: SKNode {
     private let p1HPFill: SKSpriteNode
     private let p2HPFill: SKSpriteNode
     private let roundLabel: SKLabelNode
+    private let roundCycle: SKSpriteNode
     
     // MARK: - Bottom HUD
     private let bottomBackground: SKSpriteNode
@@ -28,40 +29,66 @@ class HUDNode: SKNode {
         let halfH = size.height / 2.0
         
         // Setup HP Bars
-        p1HPBarBG = SKSpriteNode(imageNamed: "Goose HP")
-        p1HPBarBG.position = CGPoint(x: -halfW + 160, y: halfH - 60)
+        p1HPBarBG = SKSpriteNode(imageNamed: "GooseHPBar")
+        p1HPBarBG.position = CGPoint(x: -halfW + 95, y:halfH - 80)
+        p1HPBarBG.setScale(0.3)
         p1HPBarBG.zPosition = 900
         
-        p2HPBarBG = SKSpriteNode(imageNamed: "Duck HP")
-        p2HPBarBG.position = CGPoint(x: halfW - 160, y: halfH - 60)
-        // Duck HP bar is naturally facing right in the asset, if not mirror it: p2HPBarBG.xScale = -1
+        p2HPBarBG = SKSpriteNode(imageNamed: "DuckHPBar")
+        p2HPBarBG.position = CGPoint(x: halfW - 95, y: halfH - 80)
+        p2HPBarBG.setScale(0.3)
         p2HPBarBG.zPosition = 900
         
-        p1HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: 200, height: 24))
+        p1HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: 140, height: 30))
         p1HPFill.anchorPoint = CGPoint(x: 0, y: 0.5)
-        p1HPFill.position = CGPoint(x: p1HPBarBG.position.x - 100, y: p1HPBarBG.position.y)
+        p1HPFill.position = CGPoint(x: p1HPBarBG.position.x - 50, y: p1HPBarBG.position.y - 5)
         p1HPFill.zPosition = 899
         
-        p2HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: 200, height: 24))
+        p2HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: 140, height: 30))
         p2HPFill.anchorPoint = CGPoint(x: 1, y: 0.5)
-        p2HPFill.position = CGPoint(x: p2HPBarBG.position.x + 100, y: p2HPBarBG.position.y)
+        p2HPFill.position = CGPoint(x: p2HPBarBG.position.x + 50, y: p2HPBarBG.position.y - 5)
         p2HPFill.zPosition = 899
         
+        // Round Cycle
+        roundCycle = SKSpriteNode(imageNamed: "Cycle1")
+        roundCycle.position = CGPoint(x: 0, y: halfH - 90)
+        roundCycle.setScale(0.2)
+        roundCycle.zPosition = 1000
+        
         // Setup Round Label
-        roundLabel = SKLabelNode(fontNamed: ".SFProRounded-Bold")
-        roundLabel.fontSize = 24
+        roundLabel = SKLabelNode(fontNamed: "SFProRounded-Bold")
+        roundLabel.text = "Turn 1/20"
+        roundLabel.fontSize = 20
         roundLabel.fontColor = .white
-        roundLabel.position = CGPoint(x: 0, y: halfH - 50)
-        roundLabel.zPosition = 900
+        roundLabel.position = CGPoint(x: roundCycle.position.x, y: roundCycle.position.y - 6)
+        roundLabel.zPosition = 1001
+        
+        // Group Top HUD Position
+        let modifyX: CGFloat = 0
+        let modifyY: CGFloat = -20
+        p1HPBarBG.position.x += modifyX
+        p2HPBarBG.position.x += modifyX
+        p1HPFill.position.x += modifyX
+        p2HPFill.position.x += modifyX
+        roundCycle.position.x += modifyX
+        p1HPBarBG.position.y += modifyY
+        p2HPBarBG.position.y += modifyY
+        p1HPFill.position.y += modifyY
+        p2HPFill.position.y += modifyY
+        roundCycle.position.y += modifyY
+        roundLabel.position.y += modifyY
+        
         
         // Setup Bottom HUD
-        bottomBackground = SKSpriteNode(imageNamed: "BG")
-        bottomBackground.position = CGPoint(x: 0, y: -halfH + bottomBackground.size.height / 2)
+        bottomBackground = SKSpriteNode(imageNamed: "BottomHUDBackground")
+        bottomBackground.position = CGPoint(x: 0, y: -halfH + bottomBackground.size.height / 4)
+        bottomBackground.setScale(0.5)
         bottomBackground.zPosition = 900
         
-        timerBar = SKSpriteNode(imageNamed: "Timer")
-        timerBar.anchorPoint = CGPoint(x: 1, y: 0.5)
-        timerBar.position = CGPoint(x: halfW, y: bottomBackground.position.y + bottomBackground.size.height / 2 + 10)
+        timerBar = SKSpriteNode(imageNamed: "BottomHUDTimerBar")
+//        timerBar.anchorPoint = CGPoint(x: 1, y: 0.5)
+        timerBar.position = CGPoint(x: bottomBackground.position.x, y: bottomBackground.position.y)
+        timerBar.setScale(0.5)
         timerBar.zPosition = 901
         
         // Setup Active Glows (Pulsing circles behind avatars)
@@ -85,6 +112,7 @@ class HUDNode: SKNode {
         addChild(p2HPBarBG)
         addChild(p1HPFill)
         addChild(p2HPFill)
+        addChild(roundCycle)
         addChild(roundLabel)
         addChild(bottomBackground)
         addChild(timerBar)
