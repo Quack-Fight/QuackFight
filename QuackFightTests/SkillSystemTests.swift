@@ -11,14 +11,16 @@ final class SkillSystemTests: XCTestCase {
 
     var p1: PlayerEntity!
     var p2: PlayerEntity!
+    var damageSystem: DamageSystem!
     
     // We mock a scene environment for the systems
     override func setUp() {
         super.setUp()
         DamageCycleManager.shared.reset()
         
-        p1 = PlayerEntity(index: 0, throwOrigin: .zero, facing: 1)
-        p2 = PlayerEntity(index: 1, throwOrigin: .zero, facing: -1)
+        let dummyScene = GameScene(size: CGSize(width: 800, height: 600))
+        p1 = PlayerEntity(playerIndex: 0, scene: dummyScene)
+        p2 = PlayerEntity(playerIndex: 1, scene: dummyScene)
         
         // Ensure starting HP is max
         p1.component(ofType: HealthComponent.self)?.heal(GameConstants.maxHP)
@@ -31,10 +33,17 @@ final class SkillSystemTests: XCTestCase {
         // Manually register players without a full SKScene
         // Using a dummy GameScene isn't needed here if we don't spawn PhysicsEntity
         // but GameManager needs them to process damage.
-        GameManager.shared.registerPlayers(p1, p2, scene: GameScene(size: CGSize(width: 800, height: 600)))
+        GameManager.shared.registerPlayers(p1, p2, scene: dummyScene)
         
         // Since active player is initially index 0 (p1), we use p1 as active.
-        _ = DamageSystem(player1: p1, player2: p2)
+        damageSystem = DamageSystem(player1: p1, player2: p2)
+    }
+
+    override func tearDown() {
+        // Destroy the strong reference so DamageSystem deallocates
+        // and its weak EventBus subscriptions become harmless no-ops.
+        damageSystem = nil
+        super.tearDown()
     }
 
     func testDamageMultiplierDoublesDamage() {
