@@ -11,7 +11,7 @@ import SpriteKit
 
 class AnimationComponent: GKComponent {
     // Kita membuat tipe data Tuple (gabungan) untuk menyimpan aksi dan nama kuncinya
-    typealias AnimationTask = (action: SKAction, key: String)
+    typealias AnimationTask = (action: SKAction, key: String?)
     
     // Array ini berfungsi sebagai antrean (queue)
     var animationQueue: [AnimationTask] = []
@@ -20,7 +20,7 @@ class AnimationComponent: GKComponent {
         super.init()
     }
     
-    func enqueue(_ action: SKAction, key: String) {
+    func enqueue(_ action: SKAction, key: String? = nil) {
         // Appends correctly: menambahkan animasi baru ke baris paling belakang
         let newTask = (action: action, key: key)
         animationQueue.append(newTask)
