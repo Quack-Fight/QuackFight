@@ -69,6 +69,9 @@ class GameScene: SKScene {
             entity.update(deltaTime: dt)
         }
         
+        // Render System (End of frame synchronization)
+        RenderSystem.shared.update(entities: self.entities, deltaTime: dt)
+        
         self.lastUpdateTime = currentTime
     }
     
