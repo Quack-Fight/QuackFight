@@ -53,6 +53,11 @@ final class TrajectoryRenderSystem {
         trajectoryNode.lineWidth = 4.0
         trajectoryNode.alpha = 0.6 // Agak transparan agar tidak menutupi karakter
         trajectoryNode.zPosition = 10 // Pastikan garis berada di atas background
+        // Make it a dashed/dotted line
+        trajectoryNode.strokeTexture = SKTexture(imageNamed: "spark") // Optional
+        let pattern: [CGFloat] = [10.0, 10.0]
+        // Note: SKShapeNode doesn't support lineDashPattern natively unless using CGPath stroking,
+        // Actually it's easier to use CGPath(dashedWithPhase:lengths:) when drawing.
     }
     
     /// Jangan lupa panggil ini sekali saat GameScene baru mulai dimuat (didMove)
@@ -104,6 +109,7 @@ final class TrajectoryRenderSystem {
             }
         }
         
-        trajectoryNode.path = path
+        let dashedPath = path.copy(dashedWithPhase: 0, lengths: [10.0, 10.0])
+        trajectoryNode.path = dashedPath
     }
 }
