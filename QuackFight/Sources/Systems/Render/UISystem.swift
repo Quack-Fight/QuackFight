@@ -93,7 +93,7 @@ final class UISystem {
             let player = GameManager.shared.player(index: activePlayer)
             
             if let skillComp = player.component(ofType: SkillComponent.self) {
-                self.skillSelection?.show(forPlayer: activePlayer, availableSkills: skillComp.available)
+                self.skillSelection?.show(forPlayer: activePlayer, availableSkills: skillComp.availableSkills)
             }
         }
         

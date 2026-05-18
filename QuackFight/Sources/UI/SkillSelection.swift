@@ -15,7 +15,7 @@ class SkillSelection: SKNode {
     private var cancelButton: SKLabelNode
     
     private var playerIndex: Int = 0
-    private var availableSkills: [SkillType] = []
+    private var availableSkills: Set<SkillType> = []
     
     init(size: CGSize) {
         // Dark background to dim the scene
@@ -74,7 +74,7 @@ class SkillSelection: SKNode {
         }
     }
     
-    func show(forPlayer index: Int, availableSkills: [SkillType]) {
+    func show(forPlayer index: Int, availableSkills: Set<SkillType>) {
         self.playerIndex = index
         self.availableSkills = availableSkills
         
