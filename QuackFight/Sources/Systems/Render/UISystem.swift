@@ -4,6 +4,7 @@
 //
 
 import SpriteKit
+import GameplayKit
 
 /// Coordinates UI updates by subscribing to the EventBus.
 /// Holds references to the visual SKNode overlays and passes data to them.
