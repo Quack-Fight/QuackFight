@@ -31,12 +31,13 @@ import GameplayKit
 // Current State          │ Trigger                              │ Next State
 // ───────────────────────────────────────────────────────────────────────────────
 // InitState              │ first match                          │ PreviewPanState
-// InitState              │ rematch                              │ SkillSelectState
-// PreviewPanState        │ .previewPanComplete event            │ SkillSelectState
-// SkillSelectState       │ skill == .heal selected              │ HealResolveState
-// SkillSelectState       │ skill == .fixedHit selected          │ FixedHitResolveState
-// SkillSelectState       │ skill == .damageMultiplier / skip    │ AimState
+// InitState              │ rematch                              │ AimState
+// PreviewPanState        │ .previewPanComplete event            │ AimState
+// AimState               │ skill == .heal selected              │ HealResolveState
+// AimState               │ skill == .fixedHit selected          │ FixedHitResolveState
 // AimState               │ .aimLockConfirmed event              │ PowerState
+// PowerState             │ skill == .heal selected              │ HealResolveState
+// PowerState             │ skill == .fixedHit selected          │ FixedHitResolveState
 // PowerState             │ .powerLockConfirmed event            │ ThrowResolveState
 // ThrowResolveState      │ miss (.throwResolved hit:false)      │ TurnHandoffState
 // ThrowResolveState      │ hit + no KO (.turnEnded)             │ TurnHandoffState
@@ -44,7 +45,7 @@ import GameplayKit
 // HealResolveState       │ .healApplied event                   │ TurnHandoffState
 // FixedHitResolveState   │ no KO (.turnEnded)                   │ TurnHandoffState
 // FixedHitResolveState   │ KO (.gameOver)                       │ GameOverState
-// TurnHandoffState       │ .handoffDismissed, round cap not hit │ SkillSelectState
+// TurnHandoffState       │ .handoffDismissed, round cap not hit │ AimState
 // TurnHandoffState       │ .handoffDismissed, round cap hit     │ RoundOverState
 // RoundOverState         │ 1.5 s elapsed                        │ GameOverState
 // GameOverState          │ rematch (via GameScene / UISystem)   │ InitState
@@ -79,7 +80,6 @@ final class GameStateMachine {
         machine = GKStateMachine(states: [
             InitState(),
             PreviewPanState(),
-            SkillSelectState(),
             AimState(),
             PowerState(),
             ThrowResolveState(),

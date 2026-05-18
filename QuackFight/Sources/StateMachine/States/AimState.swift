@@ -35,11 +35,12 @@ final class AimState: GKState {
     // MARK: - Tokens
 
     private var aimToken: SubscriptionToken?
+    private var skillToken: SubscriptionToken?
 
     // MARK: - Valid Transitions
 
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
-        stateClass == PowerState.self
+        stateClass == PowerState.self || stateClass == HealResolveState.self || stateClass == FixedHitResolveState.self
     }
 
     // MARK: - Entry
@@ -60,6 +61,27 @@ final class AimState: GKState {
             guard self != nil else { return }
             GameStateMachine.shared.enter(PowerState.self)
         }
+        
+        // Listen for skill selection
+        skillToken = EventBus.shared.subscribe(.skillSelected) { [weak self] event in
+            guard self != nil, case .skillSelected(let skill) = event else { return }
+            
+            let activePlayer = GameManager.shared.activePlayerIndex
+            let player = GameManager.shared.player(index: activePlayer)
+            
+            if let skillComp = player.component(ofType: SkillComponent.self), skillComp.activate(skill) {
+                EventBus.shared.post(.skillUsed(playerIndex: activePlayer, skill: skill))
+                EventBus.shared.post(.showSkillSelection) // Update skill buttons UI
+                
+                if skill == .heal {
+                    GameStateMachine.shared.enter(HealResolveState.self)
+                } else if skill == .fixedHit {
+                    GameStateMachine.shared.enter(FixedHitResolveState.self)
+                }
+            }
+        }
+        
+        EventBus.shared.post(.showSkillSelection) // Ensure skills UI is updated when turn starts
     }
 
     // MARK: - Exit
@@ -73,5 +95,10 @@ final class AimState: GKState {
             EventBus.shared.unsubscribe(token)
         }
         aimToken = nil
+        
+        if let token = skillToken {
+            EventBus.shared.unsubscribe(token)
+        }
+        skillToken = nil
     }
 }

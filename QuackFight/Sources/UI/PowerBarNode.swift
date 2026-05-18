@@ -17,7 +17,7 @@ class PowerBarNode: SKNode {
     
     override init() {
         // Use the asset "Voice Input"
-        background = SKSpriteNode(imageNamed: "Voice Input")
+        background = SKSpriteNode(imageNamed: "VoiceInputBar")
         background.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         background.zPosition = 100
         

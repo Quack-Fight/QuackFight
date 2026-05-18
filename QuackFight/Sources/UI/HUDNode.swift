@@ -53,15 +53,15 @@ class HUDNode: SKNode {
         roundCycle = SKSpriteNode(imageNamed: "Cycle1")
         roundCycle.position = CGPoint(x: 0, y: halfH - 90)
         roundCycle.setScale(0.2)
-        roundCycle.zPosition = 1000
+        roundCycle.zPosition = 901
         
         // Setup Round Label
-        roundLabel = SKLabelNode(fontNamed: "SFProRounded-Bold")
-        roundLabel.text = "Turn 1/20"
-        roundLabel.fontSize = 20
-        roundLabel.fontColor = .white
-        roundLabel.position = CGPoint(x: roundCycle.position.x, y: roundCycle.position.y - 6)
-        roundLabel.zPosition = 1001
+        roundLabel = SKLabelNode(fontNamed: "SFProRounded-Black")
+        roundLabel.text = "12"
+        roundLabel.fontSize = 24
+        roundLabel.fontColor = .yellowQuack
+        roundLabel.position = CGPoint(x: roundCycle.position.x, y: roundCycle.position.y - 28)
+        roundLabel.zPosition = 902
         
         // Group Top HUD Position
         let modifyX: CGFloat = 0
@@ -76,7 +76,6 @@ class HUDNode: SKNode {
         p1HPFill.position.y += modifyY
         p2HPFill.position.y += modifyY
         roundCycle.position.y += modifyY
-        roundLabel.position.y += modifyY
         
         
         // Setup Bottom HUD

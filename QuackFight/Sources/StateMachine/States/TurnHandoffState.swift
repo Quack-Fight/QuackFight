@@ -45,7 +45,7 @@ final class TurnHandoffState: GKState {
     // MARK: - Valid Transitions
 
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
-        stateClass == SkillSelectState.self || stateClass == RoundOverState.self
+        stateClass == AimState.self || stateClass == RoundOverState.self
     }
 
     // MARK: - Entry
@@ -90,7 +90,7 @@ final class TurnHandoffState: GKState {
             determineRoundCapOutcome()
             GameStateMachine.shared.enter(RoundOverState.self)
         } else {
-            GameStateMachine.shared.enter(SkillSelectState.self)
+            GameStateMachine.shared.enter(AimState.self)
         }
     }
 

@@ -32,7 +32,7 @@ final class PreviewPanState: GKState {
     // MARK: - Valid Transitions
 
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
-        stateClass == SkillSelectState.self
+        stateClass == AimState.self
     }
 
     // MARK: - Entry
@@ -44,7 +44,7 @@ final class PreviewPanState: GKState {
 
         panToken = EventBus.shared.subscribe(.previewPanComplete) { [weak self] _ in
             guard self != nil else { return }
-            GameStateMachine.shared.enter(SkillSelectState.self)
+            GameStateMachine.shared.enter(AimState.self)
         }
     }
 
