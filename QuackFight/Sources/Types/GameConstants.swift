@@ -66,7 +66,9 @@ enum GameConstants {
     /// Playtest tuning value.
     static let gravity: CGFloat = 980.0
 
-    /// Fixed timestep used by PhysicsEngine prediction for deterministic results. jadi sperti fps
+    /// Fixed timestep used by PhysicsEngine prediction for deterministic results.
+    /// Smaller value means smoother trajectory prediction.
+    /// `1.0 / 120.0` means the prediction simulates 120 steps per second.
     static let fixedTimeStep: CGFloat = 1.0 / 120.0
 
     /// Maximum number of predicted trajectory points.
@@ -112,6 +114,12 @@ enum GameConstants {
 
     /// RMS values at or above this threshold are treated as max power (1.0).
     static let micCeiling: Double = 0.6
+    
+    /// Default power used when microphone input is unavailable.
+    static let defaultThrowPower: Double = 0.5
+
+    /// Minimum throw power used as a fallback so projectile never has zero movement.
+    static let minThrowPower: Double = 0.1
 
     // MARK: - Visual Effects
 
@@ -134,5 +142,7 @@ enum GameConstants {
     static let missParticleCount: Int = 8
     
     // MARK: - Hit Box
+
+    /// Default circular hitbox radius for projectile collision checks.
     static let defaultHitBoxRadius: CGFloat = 20.0
 }

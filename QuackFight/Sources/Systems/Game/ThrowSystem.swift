@@ -7,88 +7,220 @@
 
 import Foundation
 import GameplayKit
+import SpriteKit
 
-/// Executes a bread-projectile throw for the active player.
+/// `ThrowSystem` bertugas untuk memulai lemparan projectile.
 ///
-/// Called directly by `ThrowResolveState.didEnter(_:)`. After the projectile
-/// lands (or leaves the arena), this system posts `.throwResolved(hit:)`.
+/// Beginner-friendly:
 ///
-/// ## Intended implementation
-/// 1. Read `activePlayer.throwOrigin`, `InputStateComponent.aimAngle`, and
-///    `InputStateComponent.power`.
-/// 2. Spawn a `ProjectileEntity` at `throwOrigin`.
-/// 3. Apply velocity computed by `PhysicsEngine.calculateVelocity(angle:power:)`.
-/// 4. Post `.throwStarted` so `CameraSystem` switches to `.followBread`.
-/// 5. On collision (hit) or out-of-bounds (miss): post `.throwResolved(hit:)`.
+/// Class ini hanya melakukan "setup awal" lemparan.
+/// Dia tidak menggerakkan projectile setiap frame.
+/// Dia juga tidak mengecek hit atau miss.
+///
+/// Pembagian tugas:
+///
+/// - ThrowSystem:
+///   Membuat projectile, memberi velocity awal, memasukkan projectile ke scene.
+///
+/// - PhysicsSystem:
+///   Menggerakkan projectile setiap frame.
+///
+/// - HitDetectionSystem:
+///   Mengecek apakah projectile kena lawan.
+///
+/// - DamageSystem:
+///   Memberikan damage kalau projectile hit.
+///
+/// Flow normal:
+///
+/// AimState
+/// → menyimpan `lockedAngle`
+///
+/// PowerState
+/// → menyimpan `lockedPower`
+///
+/// ThrowResolveState
+/// → memanggil `ThrowSystem.executeThrow(...)`
+///
+/// ThrowSystem
+/// → spawn projectile dan post `.throwStarted`
 final class ThrowSystem {
 
+    // MARK: - Singleton
+
+    /// Satu instance global untuk ThrowSystem.
     static let shared = ThrowSystem()
+
     private init() {}
 
     // MARK: - State
 
+    /// Projectile yang sedang aktif / sedang terbang.
+    ///
+    /// Nil kalau tidak ada projectile.
     var activeBread: ProjectileEntity?
+
+    /// Menandakan apakah projectile sedang dalam fase terbang.
     var isInFlight: Bool = false
 
-    // MARK: - Execute
+    // MARK: - Execute Throw
 
-    /// Spawn the projectile and run the throw sequence.
-    /// Posts `.throwStarted`, then `.throwResolved(hit:)` when the projectile lands.
+    /// Memulai lemparan projectile.
+    ///
+    /// Parameter:
+    /// - player: player aktif yang sedang melempar.
+    /// - scene: GameScene tempat projectile dimasukkan.
     func executeThrow(player: PlayerEntity, scene: GameScene) {
-        let input = player.component(ofType: InputStateComponent.self)
-        let angle = input?.lockedAngle ?? GameConstants.defaultAimAngle
-        let power = input?.lockedPower ?? 0.5
-        
-        let facing = player.facing
-        let velocity = PhysicsEngine.calculateVelocity(angle: angle, power: power, facing: facing)
-        
-        // Determine projectile image
-        let activeSkill = player.component(ofType: SkillComponent.self)?.activeSkill
-        let cyclePos = DamageCycleManager.shared.position
-        
-        let imageName: String
-        if activeSkill == .damageMultiplier {
-            imageName = (cyclePos == 2) ? "Skill1Toaster" : "Skill1Bread"
-        } else {
-            imageName = (cyclePos == 2) ? "BaseToaster" : "BaseBread"
+
+        guard let input = player.component(ofType: InputStateComponent.self) else {
+            print("Warning: Player is missing InputStateComponent. Cannot execute throw.")
+            return
         }
-        
-        // Create and setup the projectile
+
+        // lockedAngle memakai radian.
+        //
+        // PhysicsEngine kamu juga memakai radian.
+        // Jadi fallback yang benar adalah GameConstants.defaultAimAngle,
+        // bukan GameConstants.defaultAimAngleDegrees.
+        let angle = input.lockedAngle ?? GameConstants.defaultAimAngle
+
+        // lockedPower normalnya 0.0 sampai 1.0.
+        //
+        // Kalau nil, pakai defaultThrowPower.
+        let power = input.lockedPower ?? GameConstants.defaultThrowPower
+
+        executeThrowWithValues(
+            player: player,
+            scene: scene,
+            angle: angle,
+            power: power
+        )
+    }
+
+    /// Logic utama untuk membuat projectile.
+    ///
+    /// Function ini dipisah agar `executeThrow` fokus mengambil input,
+    /// sedangkan function ini fokus membuat dan mendaftarkan projectile.
+    private func executeThrowWithValues(
+        player: PlayerEntity,
+        scene: GameScene,
+        angle: Double,
+        power: Double
+    ) {
+        // Hitung velocity awal projectile.
+        //
+        // PhysicsEngine.calculateVelocity menerima:
+        // - angle dalam radian
+        // - power 0.0 sampai 1.0
+        // - facing +1 atau -1
+        let velocity = PhysicsEngine.calculateVelocity(
+            angle: angle,
+            power: power,
+            facing: player.facing
+        )
+
+        // Tentukan asset projectile.
+        let imageName = projectileImageName(for: player)
+
+        // Buat ProjectileEntity.
         let projectile = ProjectileEntity(
             imageName: imageName,
             position: player.throwOrigin,
             velocity: velocity,
             radius: GameConstants.defaultHitBoxRadius
         )
-        
+
+        // Tambahkan sprite projectile ke scene.
         if let spriteNode = projectile.component(ofType: SpriteComponent.self)?.node {
             scene.addChild(spriteNode)
+        } else {
+            print("Warning: ProjectileEntity is missing SpriteComponent.")
         }
+
+        // Register entity ke ECS systems.
+        //
+        // Ini penting supaya PhysicsSystem, RenderSystem,
+        // dan HitDetectionSystem bisa memproses component projectile.
         scene.registerEntity(projectile)
+
+        // Simpan sebagai projectile aktif.
+        activeBread = projectile
+        isInFlight = true
         
-        self.activeBread = projectile
-        self.isInFlight = true
-        
+        CameraSystem.shared.followBread()
+
+        // Umumkan bahwa throw sudah dimulai.
+        //
+        // AudioManager bisa play throw SFX.
+        // UISystem bisa hide power bar.
+        // System lain yang butuh tahu bahwa projectile sudah spawn bisa bereaksi di sini.
         EventBus.shared.post(.throwStarted)
     }
-    
-    /// Removes the bread and nils the reference.
+
+    // MARK: - Clear Bread
+
+    /// Membersihkan projectile aktif dari scene.
+    ///
+    /// Dipanggil saat keluar dari ThrowResolveState.
     func clearBread(scene: GameScene) {
-        if let bread = activeBread {
-            if let spriteNode = bread.component(ofType: SpriteComponent.self)?.node {
-                spriteNode.removeFromParent()
-            }
-            scene.removeEntity(bread)
+        guard let bread = activeBread else {
+            isInFlight = false
+            return
         }
+
+        // Hapus visual node dari scene.
+        if let spriteNode = bread.component(ofType: SpriteComponent.self)?.node {
+            spriteNode.removeFromParent()
+        }
+
+        // Hapus entity dari semua component systems.
+        scene.removeEntity(bread)
+
+        // Reset state.
         activeBread = nil
         isInFlight = false
     }
 
+    /// Convenience version kalau caller tidak punya scene.
+    func clearBread() {
+        guard let scene = GameManager.shared.scene else {
+            activeBread?.component(ofType: SpriteComponent.self)?.node.removeFromParent()
+            activeBread = nil
+            isInFlight = false
+            return
+        }
+
+        clearBread(scene: scene)
+    }
+
+    // MARK: - Projectile Asset Selection
+
+    /// Menentukan asset projectile berdasarkan damage cycle dan skill aktif.
+    ///
+    /// Rule:
+    /// - Damage 10 memakai bread.
+    /// - Damage 15 memakai toaster.
+    /// - Damage Multiplier memakai versi Skill1.
+    private func projectileImageName(for player: PlayerEntity) -> String {
+        let currentDamage = DamageCycleManager.shared.currentDamage
+        let isToasterCycle = currentDamage == 15
+
+        let activeSkill = player.component(ofType: SkillComponent.self)?.activeSkill
+        let isDamageMultiplierActive = activeSkill == .damageMultiplier
+
+        if isDamageMultiplierActive {
+            return isToasterCycle ? "Skill1Toaster" : "Skill1Bread"
+        } else {
+            return isToasterCycle ? "BaseToaster" : "BaseBread"
+        }
+    }
+
     // MARK: - System Lifecycle
 
-    /// Re-register EventBus subscriptions. Called by `InitState` after
-    /// `clearAllSubscriptions()` at match start.
+    /// Saat ini ThrowSystem tidak perlu subscribe ke event apa pun.
+    ///
+    /// Hit/miss diproses oleh PhysicsSystem dan HitDetectionSystem.
     func setupSubscriptions() {
-        // TODO: Subscribe to relevant events (e.g. physics collision callbacks).
+        // No subscriptions needed for now.
     }
 }

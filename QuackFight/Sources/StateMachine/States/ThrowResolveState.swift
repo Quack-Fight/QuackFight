@@ -10,128 +10,338 @@ import GameplayKit
 // MARK: - Entry / Exit Feedback (#27, #61, #66)
 //
 // Throw Resolution Rules (#61):
-// - Hit: Damage is applied to the opponent, and the DamageCycle advances.
-// - Miss: No damage is applied, but the DamageCycle still advances. Any active
-//         skill (like damageMultiplier) is still permanently consumed.
-// - Out of Bounds: The projectile hitting the left, right, or bottom boundaries
-//                  is considered a miss.
+//
+// Hit:
+// - Projectile menyentuh hitbox lawan.
+// - HitDetectionSystem akan post event: .throwResolved(hit: true).
+// - DamageSystem akan menangani damage.
+// - DamageCycleManager akan advance setelah damage diterapkan.
+// - Kalau Damage Multiplier aktif, damage akan dikali 2.
+// - Setelah damage selesai, DamageSystem harus post .turnEnded.
+// - Kalau HP lawan habis, WinCheckSystem akan post .gameOver.
+//
+// Miss:
+// - Projectile tidak mengenai lawan.
+// - Projectile jatuh atau keluar dari area permainan.
+// - PhysicsSystem akan post event: .throwResolved(hit: false).
+// - Tidak ada damage.
+// - DamageCycleManager tetap advance karena turn sudah selesai.
+// - Skill aktif tetap dikonsumsi, termasuk Damage Multiplier.
+// - Setelah itu masuk ke TurnHandoffState.
+//
+// Out of Bounds:
+// - Projectile dianggap out-of-bounds kalau keluar dari sisi kiri, kanan,
+//   atau bawah playable world.
+// - Sisi atas tidak dihitung miss, karena high arc tetap boleh.
+// - Out-of-bounds diperlakukan sama seperti miss.
 //
 // Feedback Moments (#66):
-// didEnter  → Bread projectile spawns at activePlayer.throwOrigin.
-//             Camera switches to .followBread mode (tracks the projectile in flight).
-//             Throw SFX triggers (AudioManager).
-// On hit    → Impact SFX triggers. Camera shakes. Damage text floats above the target.
-//             Target flashes red (0.2 s, HP bar fill node).
-//             `BreadImpact` particles spawn at the collision point.
-//             Camera returns to active player.
-// On miss   → Miss SFX triggers.
-//             `BreadMiss` crumb puff particles spawn at the landing point.
-//             Camera returns to active player.
-// willExit  → Projectile node is removed from the scene.
+//
+// didEnter:
+// - ThrowSystem spawn BreadEntity / projectile.
+// - Camera pindah ke mode .followBread.
+// - Throw SFX dipicu oleh AudioManager lewat event .throwStarted.
+//
+// On hit:
+// - Impact SFX.
+// - Camera shake.
+// - Damage text muncul di atas target.
+// - Target / HP bar flash merah.
+// - BreadImpact particle muncul.
+// - Kalau tidak KO, lanjut ke TurnHandoffState.
+// - Kalau KO, lanjut ke GameOverState.
+//
+// On miss:
+// - Miss SFX.
+// - BreadMiss crumb puff particle muncul.
+// - Lanjut ke TurnHandoffState.
+//
+// willExit:
+// - Projectile dibersihkan dari scene.
+// - Subscription EventBus dilepas supaya tidak terjadi double event / memory leak.
 
-/// Handles the bread projectile's flight and routes on the outcome.
+/// State ini aktif saat projectile sedang terbang.
 ///
-/// ## Event flow
+/// Tugas utama `ThrowResolveState`:
+/// 1. Memulai lemparan lewat `ThrowSystem`.
+/// 2. Menunggu hasil lemparan dari EventBus.
+/// 3. Menentukan state berikutnya:
+///    - Miss  → `TurnHandoffState`
+///    - Hit tanpa KO → `TurnHandoffState`
+///    - Hit dengan KO → `GameOverState`
 ///
-/// 1. `ThrowSystem.shared.executeThrow()` is called immediately on entry.
-///    It spawns the projectile and posts `.throwStarted`, then (asynchronously)
-///    posts `.throwResolved(hit:)` when the projectile lands.
-///
-/// 2. Three outcomes are handled via dedicated subscriptions (a `resolved` flag
-///    prevents double-routing when events chain synchronously through EventBus):
-///
-///    - **Miss** (`.throwResolved(hit: false)`)
-///      → `resolved = true` → enter `TurnHandoffState` directly.
-///
-///    - **Hit + no KO** (`.turnEnded`, posted by `DamageSystem` after applying damage)
-///      → `resolved = true` → enter `TurnHandoffState`.
-///
-///    - **KO** (`.gameOver`, posted by `WinCheckSystem` after detecting 0 HP)
-///      → `resolved = true` → store outcome in `GameManager.lastOutcome`
-///      → enter `GameOverState`.
-///
-/// The `.gameOver` handler fires before `.turnEnded` in the KO case because
-/// `WinCheckSystem` subscribes to `.damageApplied` which `DamageSystem` posts
-/// before `.turnEnded`. The `resolved` flag silences the subsequent `.turnEnded`.
+/// Catatan penting:
+/// State ini tidak menghitung damage secara langsung.
+/// Damage tetap menjadi tanggung jawab `DamageSystem`.
 final class ThrowResolveState: GKState {
 
-    // MARK: - Tokens
+    // MARK: - EventBus Subscription Tokens
 
+    /// Token untuk mendengar event `.throwResolved`.
+    ///
+    /// Event ini dikirim oleh:
+    /// - `HitDetectionSystem` saat projectile mengenai lawan.
+    /// - `PhysicsSystem` saat projectile miss / out-of-bounds.
     private var throwToken: SubscriptionToken?
+
+    /// Token untuk mendengar event `.turnEnded`.
+    ///
+    /// Untuk hit yang tidak KO, `DamageSystem` sebaiknya post `.turnEnded`
+    /// setelah damage selesai dihitung dan damage cycle sudah advance.
     private var turnEndedToken: SubscriptionToken?
+
+    /// Token untuk mendengar event `.gameOver`.
+    ///
+    /// Event ini dikirim oleh `WinCheckSystem` jika setelah damage,
+    /// salah satu player memiliki HP <= 0.
     private var gameOverToken: SubscriptionToken?
 
-    // Prevents double-routing when .gameOver and .turnEnded both fire in the
-    // same EventBus synchronous dispatch chain.
+    /// Flag untuk mencegah state berpindah dua kali.
+    ///
+    /// Contoh kasus:
+    /// - Projectile hit.
+    /// - DamageSystem post `.damageApplied`.
+    /// - WinCheckSystem post `.gameOver`.
+    /// - DamageSystem mungkin juga post `.turnEnded`.
+    ///
+    /// Tanpa flag ini, state bisa mencoba masuk ke `GameOverState`
+    /// lalu langsung mencoba masuk ke `TurnHandoffState`.
     private var resolved = false
 
     // MARK: - Valid Transitions
 
+    /// Menentukan state apa saja yang boleh dimasuki setelah ThrowResolveState.
+    ///
+    /// ThrowResolveState hanya boleh pindah ke:
+    /// - `TurnHandoffState` kalau turn selesai dan game belum berakhir.
+    /// - `GameOverState` kalau ada KO / game over.
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
-        stateClass == TurnHandoffState.self || stateClass == GameOverState.self
+        stateClass == TurnHandoffState.self ||
+        stateClass == GameOverState.self
     }
 
     // MARK: - Entry
 
+    /// Dipanggil otomatis saat GameStateMachine masuk ke ThrowResolveState.
+    ///
+    /// Urutan penting:
+    /// 1. Reset `resolved`.
+    /// 2. Subscribe ke semua event yang dibutuhkan.
+    /// 3. Baru execute throw.
+    ///
+    /// Kenapa subscribe dulu?
+    /// Karena kalau `executeThrow()` langsung menghasilkan event,
+    /// state ini sudah siap menangkap event tersebut.
     override func didEnter(from previousState: GKState?) {
         resolved = false
 
-        // Subscribe BEFORE executing the throw to guarantee no event is missed.
+        subscribeToThrowResolved()
+        subscribeToTurnEnded()
+        subscribeToGameOver()
 
-        // Miss path: no damage, route directly to handoff.
+        executeThrow()
+    }
+
+    // MARK: - Event Subscriptions
+
+    /// Mendengar hasil lemparan dari `.throwResolved(hit:)`.
+    ///
+    /// Di state ini, kita hanya menangani MISS secara langsung.
+    ///
+    /// Kenapa HIT tidak langsung ditangani di sini?
+    /// Karena kalau hit, damage harus diproses dulu oleh `DamageSystem`.
+    /// Setelah DamageSystem selesai, ia akan post `.turnEnded`
+    /// atau WinCheckSystem akan post `.gameOver`.
+    private func subscribeToThrowResolved() {
         throwToken = EventBus.shared.subscribe(.throwResolved) { [weak self] event in
-            guard let self,
-                  case .throwResolved(let hit) = event,
-                  !hit,
-                  !self.resolved
-            else { return }
-            self.resolved = true
-            
-            // Consume skill separately on a miss per Issue #67 edge case
-            GameManager.shared.activePlayer.component(ofType: SkillComponent.self)?.consumeActive()
-            
-            GameStateMachine.shared.enter(TurnHandoffState.self)
-        }
+            guard let self else { return }
 
-        // Hit + no KO path: DamageSystem posts .turnEnded after applying damage.
+            guard case .throwResolved(let hit) = event else {
+                return
+            }
+
+            guard !self.resolved else {
+                return
+            }
+
+            if hit {
+                // Hit path:
+                // Jangan pindah state di sini.
+                // Biarkan DamageSystem menghitung damage dulu.
+                //
+                // Expected flow:
+                // .throwResolved(hit: true)
+                // → DamageSystem applies damage
+                // → DamageSystem advances damage cycle
+                // → DamageSystem posts .damageApplied
+                // → WinCheckSystem may post .gameOver
+                // → DamageSystem posts .turnEnded if no KO
+                return
+            }
+
+            // Miss path:
+            // Tidak ada DamageSystem yang akan jalan,
+            // jadi ThrowResolveState sendiri harus menyelesaikan turn miss.
+            self.resolveMiss()
+        }
+    }
+
+    /// Mendengar `.turnEnded`.
+    ///
+    /// Event ini menandakan turn sudah selesai secara normal.
+    /// Biasanya terjadi setelah:
+    /// - Hit berhasil dan DamageSystem sudah selesai apply damage.
+    /// - Tidak ada KO.
+    ///
+    /// Kalau event ini diterima, kita lanjut ke TurnHandoffState.
+    private func subscribeToTurnEnded() {
         turnEndedToken = EventBus.shared.subscribe(.turnEnded) { [weak self] _ in
-            guard let self, !self.resolved else { return }
+            guard let self else { return }
+
+            guard !self.resolved else {
+                return
+            }
+
             self.resolved = true
             GameStateMachine.shared.enter(TurnHandoffState.self)
         }
+    }
 
-        // KO path: WinCheckSystem posts .gameOver after detecting 0 HP.
-        // This fires before .turnEnded in the synchronous dispatch chain, so
-        // the resolved flag will silence the subsequent .turnEnded.
+    /// Mendengar `.gameOver`.
+    ///
+    /// Event ini dikirim saat WinCheckSystem mendeteksi:
+    /// - Salah satu player HP <= 0.
+    /// - Atau game selesai karena round cap.
+    ///
+    /// Kalau game over, outcome disimpan ke GameManager,
+    /// lalu masuk ke GameOverState.
+    private func subscribeToGameOver() {
         gameOverToken = EventBus.shared.subscribe(.gameOver) { [weak self] event in
-            guard let self,
-                  !self.resolved,
-                  case .gameOver(let outcome) = event
-            else { return }
+            guard let self else { return }
+
+            guard !self.resolved else {
+                return
+            }
+
+            guard case .gameOver(let outcome) = event else {
+                return
+            }
+
             self.resolved = true
             GameManager.shared.lastOutcome = outcome
             GameStateMachine.shared.enter(GameOverState.self)
         }
+    }
 
-        if let scene = GameManager.shared.scene {
-            ThrowSystem.shared.executeThrow(player: GameManager.shared.activePlayer, scene: scene)
-        } else {
+    // MARK: - Throw Start
+
+    /// Memulai lemparan projectile.
+    ///
+    /// ThrowSystem bertanggung jawab untuk:
+    /// - Membaca angle dan power yang sudah di-lock.
+    /// - Membuat BreadEntity / projectile.
+    /// - Memberi velocity awal.
+    /// - Menambahkan projectile ke scene.
+    /// - Mengubah camera ke mode follow projectile.
+    private func executeThrow() {
+        guard let scene = GameManager.shared.scene else {
             print("Warning: GameManager.shared.scene is nil; cannot execute throw.")
+            return
         }
+
+        ThrowSystem.shared.executeThrow(
+            player: GameManager.shared.activePlayer,
+            scene: scene
+        )
+    }
+
+    // MARK: - Miss Resolution
+
+    /// Menyelesaikan turn ketika projectile miss.
+    ///
+    /// Aturan miss:
+    /// - Tidak ada damage.
+    /// - Skill aktif tetap dikonsumsi.
+    /// - Damage cycle tetap maju.
+    /// - State lanjut ke TurnHandoffState.
+    ///
+    /// Kenapa DamageCycle advance di sini?
+    /// Karena DamageSystem hanya berjalan saat hit.
+    /// Kalau miss, tidak ada sistem lain yang otomatis memajukan cycle.
+    private func resolveMiss() {
+        resolved = true
+
+        consumeActiveSkillOnMiss()
+        advanceDamageCycleOnMiss()
+
+        // Memberi tahu sistem lain bahwa turn throw sudah selesai.
+        //
+        // Karena `resolved` sudah true, subscription `.turnEnded`
+        // di file ini tidak akan menjalankan transition kedua kali.
+        EventBus.shared.post(.turnEnded)
+
+        GameStateMachine.shared.enter(TurnHandoffState.self)
+    }
+
+    /// Mengonsumsi skill aktif saat miss.
+    ///
+    /// Contoh:
+    /// Player mengaktifkan Damage Multiplier,
+    /// tapi lemparannya meleset.
+    ///
+    /// Skill tetap hilang karena sudah dipakai untuk turn ini.
+    private func consumeActiveSkillOnMiss() {
+        GameManager.shared.activePlayer
+            .component(ofType: SkillComponent.self)?
+            .consumeActive()
+    }
+
+    /// Memajukan damage cycle saat miss.
+    ///
+    /// Cycle damage adalah:
+    /// 10 → 10 → 15 → 10 → ...
+    ///
+    /// Miss tetap dianggap completed throw turn,
+    /// jadi cycle tetap maju.
+    private func advanceDamageCycleOnMiss() {
+        DamageCycleManager.shared.advance()
     }
 
     // MARK: - Exit
 
+    /// Dipanggil otomatis saat keluar dari ThrowResolveState.
+    ///
+    /// Di sini kita membersihkan:
+    /// - Semua EventBus subscription.
+    /// - Projectile dari scene.
+    ///
+    /// Ini penting supaya:
+    /// - Event lama tidak terpanggil di turn berikutnya.
+    /// - Projectile lama tidak tertinggal di scene.
+    /// - Tidak ada memory leak dari closure subscription.
     override func willExit(to nextState: GKState) {
+        unsubscribeFromEvents()
+        clearProjectile()
+        CameraSystem.shared.returnToPlayer(index: GameManager.shared.activePlayerIndex)
+    }
+
+    /// Melepas semua subscription EventBus yang dibuat saat `didEnter`.
+    private func unsubscribeFromEvents() {
         [throwToken, turnEndedToken, gameOverToken]
             .compactMap { $0 }
             .forEach { EventBus.shared.unsubscribe($0) }
+
         throwToken = nil
         turnEndedToken = nil
         gameOverToken = nil
-        
-        if let scene = GameManager.shared.scene {
-            ThrowSystem.shared.clearBread(scene: scene)
+    }
+
+    /// Menghapus projectile aktif dari scene.
+    private func clearProjectile() {
+        guard let scene = GameManager.shared.scene else {
+            return
         }
+
+        ThrowSystem.shared.clearBread(scene: scene)
     }
 }
