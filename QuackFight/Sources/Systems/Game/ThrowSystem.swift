@@ -61,7 +61,11 @@ final class ThrowSystem {
             radius: GameConstants.defaultHitBoxRadius
         )
         
-        projectile.addToScene(scene)
+        if let spriteNode = projectile.component(ofType: SpriteComponent.self)?.node {
+            scene.addChild(spriteNode)
+        }
+        scene.registerEntity(projectile)
+        
         self.activeBread = projectile
         self.isInFlight = true
         
@@ -70,7 +74,12 @@ final class ThrowSystem {
     
     /// Removes the bread and nils the reference.
     func clearBread(scene: GameScene) {
-        activeBread?.removeFromScene(scene)
+        if let bread = activeBread {
+            if let spriteNode = bread.component(ofType: SpriteComponent.self)?.node {
+                spriteNode.removeFromParent()
+            }
+            scene.removeEntity(bread)
+        }
         activeBread = nil
         isInFlight = false
     }

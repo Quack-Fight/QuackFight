@@ -33,21 +33,4 @@ class ProjectileEntity: GKEntity {
         fatalError("init(coder:) is not supported for ProjectileEntity")
     }
     
-    // MARK: - Scene Management
-    
-    /// Adds the projectile to the scene cleanly
-    func addToScene(_ scene: GameScene) {
-        if let spriteNode = component(ofType: SpriteComponent.self)?.node {
-            scene.addChild(spriteNode)
-        }
-        scene.registerEntity(self)
-    }
-    
-    /// Removes the projectile from the scene cleanly with no dangling references
-    func removeFromScene(_ scene: GameScene) {
-        if let spriteNode = component(ofType: SpriteComponent.self)?.node {
-            spriteNode.removeFromParent()
-        }
-        scene.removeEntity(self)
-    }
 }
