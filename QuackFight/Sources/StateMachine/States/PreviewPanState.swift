@@ -43,7 +43,7 @@ final class PreviewPanState: GKState {
         // CameraSystem will post .previewPanComplete when the animation finishes.
 
         panToken = EventBus.shared.subscribe(.previewPanComplete) { [weak self] _ in
-            guard let self else { return }
+            guard self != nil else { return }
             GameStateMachine.shared.enter(SkillSelectState.self)
         }
     }

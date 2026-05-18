@@ -101,6 +101,7 @@ class GameScene: SKScene {
         
         // Update state machine and systems
         GameStateMachine.shared.update(deltaTime: dt)
+        TurnSystem.shared.update(deltaTime: dt)
         PhysicsSystem.shared.update(deltaTime: dt)
         HitDetectionSystem.shared.update(deltaTime: dt)
         CameraSystem.shared.update(deltaTime: dt)

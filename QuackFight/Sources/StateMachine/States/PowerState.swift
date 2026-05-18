@@ -44,11 +44,11 @@ final class PowerState: GKState {
         // TODO: VoiceInputSystem.shared.activate()
 
         // Start the 5-second power timer (TurnSystem posts .timerTick + .powerLocked on timeout).
-        // TODO: TurnSystem.shared.startPowerTimer()
+        TurnSystem.shared.startPowerTimer()
 
         // Wait for VoiceInputSystem to confirm the power value is locked.
         powerToken = EventBus.shared.subscribe(.powerLockConfirmed) { [weak self] _ in
-            guard let self else { return }
+            guard self != nil else { return }
             GameStateMachine.shared.enter(ThrowResolveState.self)
         }
     }
@@ -58,7 +58,7 @@ final class PowerState: GKState {
     override func willExit(to nextState: GKState) {
         // Stop microphone and timer before leaving.
         // TODO: VoiceInputSystem.shared.deactivate()
-        // TODO: TurnSystem.shared.stopTimer()
+        TurnSystem.shared.stopTimer()
 
         if let token = powerToken {
             EventBus.shared.unsubscribe(token)

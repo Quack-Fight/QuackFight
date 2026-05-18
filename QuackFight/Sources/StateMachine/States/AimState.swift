@@ -53,11 +53,11 @@ final class AimState: GKState {
         // TODO: GyroscopeSystem.shared.activate()
 
         // Start the 5-second aim timer (TurnSystem posts .timerTick + .aimLocked on timeout).
-        // TODO: TurnSystem.shared.startAimTimer()
+        TurnSystem.shared.startAimTimer()
 
         // Wait for GyroscopeSystem to confirm the angle is locked.
         aimToken = EventBus.shared.subscribe(.aimLockConfirmed) { [weak self] _ in
-            guard let self else { return }
+            guard self != nil else { return }
             GameStateMachine.shared.enter(PowerState.self)
         }
     }
@@ -67,7 +67,7 @@ final class AimState: GKState {
     override func willExit(to nextState: GKState) {
         // Stop gyroscope and timer before leaving.
         // TODO: GyroscopeSystem.shared.deactivate()
-        // TODO: TurnSystem.shared.stopTimer()
+        TurnSystem.shared.stopTimer()
 
         if let token = aimToken {
             EventBus.shared.unsubscribe(token)
