@@ -22,26 +22,8 @@ class GameScene: SKScene {
         let cameraEntity = CameraEntity(scene: self)
         
         // 2. Setup Players
-        let p1 = PlayerEntity(playerIndex: 0)
-        let p2 = PlayerEntity(playerIndex: 1)
-        
-        // P1 starts at -300x, P2 at +300x
-        if let t1 = p1.component(ofType: TransformComponent.self) {
-            t1.position = CGPoint(x: -300, y: 0)
-        }
-        if let t2 = p2.component(ofType: TransformComponent.self) {
-            t2.position = CGPoint(x: 300, y: 0)
-        }
-        
-        registerEntity(p1)
-        registerEntity(p2)
-        
-        if let sprite1 = p1.component(ofType: SpriteComponent.self)?.node {
-            addChild(sprite1)
-        }
-        if let sprite2 = p2.component(ofType: SpriteComponent.self)?.node {
-            addChild(sprite2)
-        }
+        let p1 = PlayerEntity(playerIndex: 0, scene: self)
+        let p2 = PlayerEntity(playerIndex: 1, scene: self)
         
         GameManager.shared.registerPlayers(p1, p2, scene: self)
         
