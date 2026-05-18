@@ -40,10 +40,9 @@ final class PhysicsSystem: GKComponentSystem<TransformComponent> {
 
     static let shared = PhysicsSystem()
 
-    private init() {
+    private override init() {
         super.init(componentClass: TransformComponent.self)
     }
-
     // MARK: - Update
 
     /// Dipanggil setiap frame oleh `GameScene.update(_:)`.
