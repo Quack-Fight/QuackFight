@@ -57,7 +57,7 @@ final class TrajectoryRenderSystem {
         trajectoryNode.strokeTexture = SKTexture(imageNamed: "spark") // Optional
         let pattern: [CGFloat] = [10.0, 10.0]
         // Note: SKShapeNode doesn't support lineDashPattern natively unless using CGPath stroking,
-        // Actually it's easier to use CGPath(dashedWithPhase:lengths:) when drawing.
+        // Actually it's easier to use CGPath(dashingWithPhase:lengths:) when drawing.
     }
     
     /// Jangan lupa panggil ini sekali saat GameScene baru mulai dimuat (didMove)
@@ -109,7 +109,7 @@ final class TrajectoryRenderSystem {
             }
         }
         
-        let dashedPath = path.copy(dashedWithPhase: 0, lengths: [10.0, 10.0])
+        let dashedPath = path.copy(dashingWithPhase: 0, lengths: [10.0, 10.0])
         trajectoryNode.path = dashedPath
     }
 }
