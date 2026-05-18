@@ -147,6 +147,7 @@ enum GameEvent {
 
     // MARK: UI
     case showTurnHandoff(nextPlayerIndex: Int)
+    case showInstruction(String)
     case hpChanged(playerIndex: Int, hp: Int)
 
     // MARK: - Key
@@ -159,7 +160,7 @@ enum GameEvent {
         case healApplied, turnEnded, gameOver, timerTick, amplitudeUpdated
         case cycleAdvanced, roundCountUpdated, previewPanComplete
         case cameraReturnComplete, showSkillSelection, skillSelected
-        case skillSkipped, skillUsed, showTurnHandoff, hpChanged
+        case skillSkipped, skillUsed, showTurnHandoff, showInstruction, hpChanged
     }
 
     /// Derives the `Key` from `self`, stripping associated values so it can
@@ -188,6 +189,7 @@ enum GameEvent {
         case .skillSkipped:        return .skillSkipped
         case .skillUsed:           return .skillUsed
         case .showTurnHandoff:     return .showTurnHandoff
+        case .showInstruction:     return .showInstruction
         case .hpChanged:           return .hpChanged
         }
     }

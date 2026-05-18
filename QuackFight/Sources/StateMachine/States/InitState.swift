@@ -35,7 +35,7 @@ final class InitState: GKState {
     // MARK: - Valid Transitions
 
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
-        stateClass == PreviewPanState.self || stateClass == SkillSelectState.self
+        stateClass == PreviewPanState.self || stateClass == AimState.self
     }
 
     // MARK: - Entry
@@ -67,7 +67,7 @@ final class InitState: GKState {
         if isFirst {
             GameStateMachine.shared.setFirstMatchComplete()
         }
-        GameStateMachine.shared.enter(isFirst ? PreviewPanState.self : SkillSelectState.self)
+        GameStateMachine.shared.enter(isFirst ? PreviewPanState.self : AimState.self)
     }
 
     // MARK: - Private Helpers
