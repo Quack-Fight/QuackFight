@@ -53,6 +53,7 @@ final class AimState: GKState {
 
         // Activate gyroscope — reads device tilt and writes liveAngle each CMMotionManager callback.
         GyroscopeSystem.shared.activate()
+        EventBus.shared.post(.showInstruction("Tilt to Aim"))
 
         // Enable tap-to-lock so TapInputSystem posts .aimLocked on touch.
         GameManager.shared.tapContext = .aiming

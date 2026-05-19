@@ -16,15 +16,17 @@ final class UISystem {
     private var powerBar: PowerBarNode?
     private var turnHandoff: TurnHandoffOverlay?
     private var skillSelection: SkillSelection?
+    private var viewportSize: CGSize = .zero
     
     private init() {}
     
     /// Binds the system to the scene's UI nodes.
-    func setup(hud: HUDNode, powerBar: PowerBarNode, turnHandoff: TurnHandoffOverlay, skillSelection: SkillSelection) {
+    func setup(hud: HUDNode, powerBar: PowerBarNode, turnHandoff: TurnHandoffOverlay, skillSelection: SkillSelection, viewportSize: CGSize) {
         self.hudNode = hud
         self.powerBar = powerBar
         self.turnHandoff = turnHandoff
         self.skillSelection = skillSelection
+        self.viewportSize = viewportSize
         
         setupSubscriptions()
     }
@@ -39,6 +41,7 @@ final class UISystem {
             guard let self, case .timerTick(let remaining) = event else { return }
             let maxTime: TimeInterval = 5.0 // Aim/Power time limit
             self.hudNode?.updateTimer(percentage: CGFloat(remaining / maxTime))
+            self.hudNode?.updateCountdown(remaining: remaining)
         }
         
         EventBus.shared.subscribe(.damageApplied) { [weak self] event in
@@ -73,6 +76,7 @@ final class UISystem {
             
             // Show power bar only if instruction is Shout!
             if text == "Shout!" {
+                self.powerBar?.positionForActivePlayer(GameManager.shared.activePlayerIndex, viewportSize: self.viewportSize)
                 self.powerBar?.show()
             } else {
                 self.powerBar?.hide()
@@ -98,8 +102,7 @@ final class UISystem {
             }
         }
         
-        EventBus.shared.subscribe(.skillUsed) { [weak self] _ in
-            guard let self else { return }
+        EventBus.shared.subscribe(.skillUsed) { _ in
             // Let the HUD trigger any specific animations if needed.
         }
 

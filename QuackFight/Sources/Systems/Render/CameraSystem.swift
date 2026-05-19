@@ -106,7 +106,7 @@ final class CameraSystem {
         switch cameraComp.state {
         case .staticOnPlayer(let index):
             let player = GameManager.shared.player(index: index)
-            cameraNode.position = player.throwOrigin
+            cameraNode.position = clampedCameraPosition(player.throwOrigin)
 
         case .previewPan:
             let p1 = GameManager.shared.player(index: 0)
@@ -115,11 +115,11 @@ final class CameraSystem {
             panProgress += deltaTime
             let t = min(CGFloat(panProgress / previewPanDuration), 1.0)
 
-            cameraNode.position = CGPoint.lerp(
+            cameraNode.position = clampedCameraPosition(CGPoint.lerp(
                 from: p2.throwOrigin,
                 to: p1.throwOrigin,
                 t: t
-            )
+            ))
 
             if t >= 1.0 {
                 cameraComp.state = .staticOnPlayer(index: 0)
@@ -133,24 +133,24 @@ final class CameraSystem {
                 return
             }
 
-            cameraNode.position = CGPoint.lerp(
+            cameraNode.position = clampedCameraPosition(CGPoint.lerp(
                 from: cameraNode.position,
                 to: targetPos,
                 t: cameraFollowLerp
-            )
+            ))
 
         case .returnToPlayer(let index):
             let player = GameManager.shared.player(index: index)
             let targetPos = player.throwOrigin
 
-            cameraNode.position = CGPoint.lerp(
+            cameraNode.position = clampedCameraPosition(CGPoint.lerp(
                 from: cameraNode.position,
                 to: targetPos,
                 t: cameraReturnLerp
-            )
+            ))
 
             if cameraNode.position.distance(to: targetPos) < 4.0 {
-                cameraNode.position = targetPos
+                cameraNode.position = clampedCameraPosition(targetPos)
                 cameraComp.state = .staticOnPlayer(index: index)
                 EventBus.shared.post(.cameraReturnComplete)
             }
@@ -170,5 +170,16 @@ final class CameraSystem {
         }
 
         return cameraComp
+    }
+
+    private func clampedCameraPosition(_ target: CGPoint) -> CGPoint {
+        guard let scene = GameManager.shared.scene else { return target }
+
+        let halfW = scene.size.width / 2.0
+        let leftX = halfW
+        let rightX = max(leftX, scene.playableWorldWidth - halfW)
+        let x = min(max(target.x, leftX), rightX)
+
+        return CGPoint(x: x, y: target.y)
     }
 }

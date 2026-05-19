@@ -26,7 +26,7 @@ class CameraEntity: GKEntity {
 
         // Place the camera at Player 1's starting position so the first frame
         // doesn't show a black viewport while CameraSystem runs its first update.
-        cameraNode.position = CGPoint(x: GameConstants.playerXInset, y: GameConstants.player1YPosition)
+        cameraNode.position = CGPoint(x: scene.size.width * 0.5, y: GameConstants.player1YPosition)
 
         scene.addChild(cameraNode)
         scene.camera = cameraNode

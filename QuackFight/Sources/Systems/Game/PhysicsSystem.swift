@@ -103,7 +103,7 @@ final class PhysicsSystem: GKComponentSystem<TransformComponent> {
     /// - bawah = miss
     /// - atas tidak dihitung miss, supaya high arc tetap boleh
     private func isOutOfBounds(_ position: CGPoint) -> Bool {
-        let sceneWidth = GameManager.shared.scene?.size.width ?? 2000
+        let sceneWidth = GameManager.shared.scene?.playableWorldWidth ?? 2000
 
         // Catatan:
         // Ini memakai asumsi posisi X dunia dimulai dari 0 sampai sceneWidth.

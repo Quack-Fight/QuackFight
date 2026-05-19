@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -13,8 +14,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        configureAudioSession()
+        requestMicrophonePermission()
         return true
+    }
+
+    private func configureAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .mixWithOthers])
+            try session.setActive(true)
+        } catch {
+            print("AppDelegate: failed to configure audio session - \(error)")
+        }
+    }
+
+    private func requestMicrophonePermission() {
+        guard AVAudioApplication.shared.recordPermission == .undetermined else { return }
+        AVAudioApplication.requestRecordPermission { granted in
+            if !granted {
+                print("AppDelegate: microphone permission denied")
+            }
+        }
     }
 
     // MARK: UISceneSession Lifecycle
@@ -33,4 +54,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 }
-

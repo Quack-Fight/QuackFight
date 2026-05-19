@@ -20,30 +20,26 @@ class GameViewController: UIViewController {
                 // Copy gameplay relatedx content over to the scene
                 sceneNode.entities = scene.entities
                 sceneNode.graphs = scene.graphs
-                sceneNode.scaleMode = .aspectFill
+                sceneNode.scaleMode = .resizeFill
                 
                 view.presentScene(sceneNode)
                 view.ignoresSiblingOrder = true
-                view.showsFPS = true
-                view.showsNodeCount = true
+                view.showsFPS = false
+                view.showsNodeCount = false
             } else {
                 // Fallback if GameScene.sks is missing or its Custom Class isn't set
                 let fallbackScene = GameScene(size: view.bounds.size)
-                fallbackScene.scaleMode = .aspectFill
+                fallbackScene.scaleMode = .resizeFill
                 view.presentScene(fallbackScene)
                 view.ignoresSiblingOrder = true
-                view.showsFPS = true
-                view.showsNodeCount = true
+                view.showsFPS = false
+                view.showsNodeCount = false
             }
         }
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            return .allButUpsideDown
-        } else {
-            return .all
-        }
+        return UIDevice.current.userInterfaceIdiom == .phone ? .portrait : .all
     }
 
     override var prefersStatusBarHidden: Bool {

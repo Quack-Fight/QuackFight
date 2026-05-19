@@ -12,6 +12,7 @@ class GameScene: SKScene {
 
     var entities = [GKEntity]()
     var graphs = [String : GKGraph]()
+    private(set) var playableWorldWidth: CGFloat = 0
 
     private var lastUpdateTime: TimeInterval = 0
 
@@ -54,6 +55,7 @@ class GameScene: SKScene {
 
         // 3. HUD — attached to the camera node so it stays fixed on screen
         setupUI(cameraNode: cameraEntity.cameraNode)
+        TrajectoryRenderSystem.shared.setup(in: self)
 
         // 4. Start the state machine (InitState → PreviewPanState / AimState)
         GameStateMachine.shared.start()
@@ -61,9 +63,9 @@ class GameScene: SKScene {
 
     private func setupBackground() {
         let bg = SKSpriteNode(imageNamed: "Background1")
-        // Widen by 1.5× so the background covers camera movement left/right.
-        bg.size = CGSize(width: self.size.width * 1.5, height: self.size.height)
-        bg.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
+        playableWorldWidth = max(self.size.width * 2.2, self.size.width + 520)
+        bg.size = CGSize(width: playableWorldWidth, height: self.size.height)
+        bg.position = CGPoint(x: playableWorldWidth / 2, y: self.size.height / 2)
         bg.zPosition = -10
         addChild(bg)
     }
@@ -79,7 +81,7 @@ class GameScene: SKScene {
         cameraNode.addChild(turnHandoff)
         cameraNode.addChild(skillSelection)
 
-        UISystem.shared.setup(hud: hud, powerBar: powerBar, turnHandoff: turnHandoff, skillSelection: skillSelection)
+        UISystem.shared.setup(hud: hud, powerBar: powerBar, turnHandoff: turnHandoff, skillSelection: skillSelection, viewportSize: self.size)
     }
 
     // MARK: - Input
@@ -101,6 +103,9 @@ class GameScene: SKScene {
 
         // State machine first — may change which systems are relevant this frame.
         GameStateMachine.shared.update(deltaTime: dt)
+
+        GyroscopeSystem.shared.update(deltaTime: dt)
+        TrajectoryRenderSystem.shared.update(deltaTime: dt)
 
         // Physics before hit-detection: positions must be updated before collision checks.
         TurnSystem.shared.update(deltaTime: dt)

@@ -47,6 +47,7 @@ final class PowerState: GKState {
 
         // Activate microphone — reads RMS each audio buffer and writes livePower.
         VoiceInputSystem.shared.activate()
+        EventBus.shared.post(.showInstruction("Shout!"))
 
         // Enable tap-to-lock so TapInputSystem posts .powerLocked on touch.
         GameManager.shared.tapContext = .power

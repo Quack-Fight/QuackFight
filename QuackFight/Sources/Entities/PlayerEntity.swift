@@ -42,7 +42,9 @@ class PlayerEntity: GKEntity {
         self.playerIndex = playerIndex
         super.init()
 
-        let xPos = playerIndex == 0 ? GameConstants.playerXInset : (scene.size.width - GameConstants.playerXInset)
+        let viewportWidth = scene.size.width
+        let worldWidth = max(scene.playableWorldWidth, viewportWidth)
+        let xPos = playerIndex == 0 ? viewportWidth * 0.5 : worldWidth - viewportWidth * 0.5
         let yPos = playerIndex == 0 ? GameConstants.player1YPosition : GameConstants.player2YPosition
         self.throwOrigin = CGPoint(x: xPos, y: yPos)
 
@@ -54,7 +56,7 @@ class PlayerEntity: GKEntity {
         // HUDNode uses GooseHPBar for P1 and DuckHPBar for P2, confirming this mapping.
         let imageName = playerIndex == 0 ? "BaseGoose" : "BaseDuck"
         let spriteComp = SpriteComponent(imageName: imageName)
-        spriteComp.node.size = CGSize(width: 200, height: 200)
+        spriteComp.node.size = CGSize(width: 170, height: 170)
         spriteComp.node.zPosition = 1
         scene.addChild(spriteComp.node)
         addComponent(spriteComp)
