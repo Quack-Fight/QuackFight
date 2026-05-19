@@ -15,26 +15,23 @@ class GameViewController: UIViewController {
         super.viewDidLoad()
         
         if let view = self.view as? SKView {
-            // Attempt to load 'GameScene.sks' as a GKScene
-            if let scene = GKScene(fileNamed: "GameScene"), let sceneNode = scene.rootNode as? GameScene {
-                // Copy gameplay relatedx content over to the scene
-                sceneNode.entities = scene.entities
-                sceneNode.graphs = scene.graphs
-                sceneNode.scaleMode = .aspectFill
-                
-                view.presentScene(sceneNode)
-                view.ignoresSiblingOrder = true
-                view.showsFPS = true
-                view.showsNodeCount = true
-            } else {
-                // Fallback if GameScene.sks is missing or its Custom Class isn't set
-                let fallbackScene = GameScene(size: view.bounds.size)
-                fallbackScene.scaleMode = .aspectFill
-                view.presentScene(fallbackScene)
-                view.ignoresSiblingOrder = true
-                view.showsFPS = true
-                view.showsNodeCount = true
+            
+            // Opsi 1: Jika kamu punya file visual "MenuScene.sks"
+            if let menuScene = SKScene(fileNamed: "MenuScene") as? MenuScene {
+                menuScene.scaleMode = .aspectFill
+                view.presentScene(menuScene)
             }
+            // Opsi 2: Jika MenuScene murni dari kode (tanpa .sks file)
+            else {
+                let fallbackMenu = MenuScene(size: view.bounds.size)
+                fallbackMenu.scaleMode = .aspectFill
+                view.presentScene(fallbackMenu)
+            }
+            
+            // Konfigurasi performa view
+            view.ignoresSiblingOrder = true
+            view.showsFPS = true
+            view.showsNodeCount = true
         }
     }
 
