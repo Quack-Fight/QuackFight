@@ -41,6 +41,7 @@ final class UISystem {
             guard let self, case .timerTick(let remaining) = event else { return }
             let maxTime: TimeInterval = 5.0
             self.hudNode?.updateTimer(percentage: CGFloat(remaining / maxTime))
+            self.hudNode?.updateCountdown(remaining: remaining)
         }
         
         EventBus.shared.subscribe(.damageApplied) { [weak self] event in
