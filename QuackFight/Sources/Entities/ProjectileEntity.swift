@@ -14,8 +14,9 @@ class ProjectileEntity: GKEntity {
         super.init()
         
         // Issue #38: Attach all 4 components
-        // SpriteComponent handles the visual node
         let spriteComponent = SpriteComponent(imageName: imageName)
+        // The source PNGs are 2048×2048; constrain to a gameplay-appropriate size.
+        spriteComponent.node.size = CGSize(width: 60, height: 60)
         
         // Issue #94: Add a visual trail
         let trail = SKEmitterNode()

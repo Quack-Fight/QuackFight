@@ -9,18 +9,28 @@ import GameplayKit
 import SpriteKit
 
 class CameraEntity: GKEntity {
-    
+
+    /// The SKCameraNode that is registered as `scene.camera`.
+    /// Exposed so GameScene.setupUI can attach HUD nodes to it.
     let cameraNode: SKCameraNode
-    
+
     init(scene: GameScene) {
-        self.cameraNode = SKCameraNode()
+        // CameraComponent owns the SKCameraNode; we expose it via `cameraNode`
+        // so both CameraSystem (which reads cameraComp.node to move the camera)
+        // and GameScene.setupUI (which adds HUD children to it) use the same node.
+        let cameraComp = CameraComponent(state: .staticOnPlayer(index: 0))
+        self.cameraNode = cameraComp.node
         super.init()
-        
-        // Add to scene and set as the active camera
+
+        addComponent(cameraComp)
+
+        // Place the camera at Player 1's starting position so the first frame
+        // doesn't show a black viewport while CameraSystem runs its first update.
+        cameraNode.position = CGPoint(x: GameConstants.playerXInset, y: GameConstants.player1YPosition)
+
         scene.addChild(cameraNode)
         scene.camera = cameraNode
-        
-        // Register entity for updates
+
         scene.registerEntity(self)
     }
     

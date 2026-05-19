@@ -42,7 +42,6 @@ class PlayerEntity: GKEntity {
         self.playerIndex = playerIndex
         super.init()
 
-        // Set origin based on GameConstants layout
         let xPos = playerIndex == 0 ? GameConstants.playerXInset : (scene.size.width - GameConstants.playerXInset)
         let yPos = playerIndex == 0 ? GameConstants.player1YPosition : GameConstants.player2YPosition
         self.throwOrigin = CGPoint(x: xPos, y: yPos)
@@ -50,7 +49,20 @@ class PlayerEntity: GKEntity {
         addComponent(HealthComponent())
         addComponent(SkillComponent())
         addComponent(InputStateComponent())
-        
+
+        // Player 1 (index 0) = Goose; Player 2 (index 1) = Duck.
+        // HUDNode uses GooseHPBar for P1 and DuckHPBar for P2, confirming this mapping.
+        let imageName = playerIndex == 0 ? "BaseGoose" : "BaseDuck"
+        let spriteComp = SpriteComponent(imageName: imageName)
+        spriteComp.node.size = CGSize(width: 200, height: 200)
+        spriteComp.node.zPosition = 1
+        scene.addChild(spriteComp.node)
+        addComponent(spriteComp)
+
+        // TransformComponent seeds the initial world position so RenderSystem
+        // places the sprite at throwOrigin on the very first frame.
+        addComponent(TransformComponent(position: throwOrigin))
+
         scene.registerEntity(self)
     }
 

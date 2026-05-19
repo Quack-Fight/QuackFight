@@ -41,8 +41,15 @@ final class PowerState: GKState {
     // MARK: - Entry
 
     override func didEnter(from previousState: GKState?) {
-        // Activate microphone input (writes livePower and posts .amplitudeUpdated).
-        // TODO: VoiceInputSystem.shared.activate()
+        // Set phase to .power so VoiceInputSystem is allowed to write livePower.
+        GameManager.shared.activePlayer
+            .component(ofType: InputStateComponent.self)?.phase = .power
+
+        // Activate microphone — reads RMS each audio buffer and writes livePower.
+        VoiceInputSystem.shared.activate()
+
+        // Enable tap-to-lock so TapInputSystem posts .powerLocked on touch.
+        GameManager.shared.tapContext = .power
 
         // Start the 5-second power timer (TurnSystem posts .timerTick + .powerLocked on timeout).
         TurnSystem.shared.startPowerTimer()
@@ -76,9 +83,9 @@ final class PowerState: GKState {
     // MARK: - Exit
 
     override func willExit(to nextState: GKState) {
-        // Stop microphone and timer before leaving.
-        // TODO: VoiceInputSystem.shared.deactivate()
+        VoiceInputSystem.shared.deactivate()
         TurnSystem.shared.stopTimer()
+        GameManager.shared.tapContext = .none
 
         if let token = powerToken {
             EventBus.shared.unsubscribe(token)

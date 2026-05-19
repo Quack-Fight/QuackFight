@@ -63,7 +63,9 @@ final class TurnHandoffState: GKState {
         let nextIndex = GameManager.shared.nextPlayerIndex
         EventBus.shared.post(.showTurnHandoff(nextPlayerIndex: nextIndex))
 
-        // Step 4: Wait for the current player to tap "Continue".
+        // Step 4: Enable tap so TapInputSystem posts .handoffDismissed.
+        GameManager.shared.tapContext = .turnHandoff
+
         handoffToken = EventBus.shared.subscribe(.handoffDismissed) { [weak self] _ in
             guard let self else { return }
             self.handoffDismissed()
@@ -73,6 +75,7 @@ final class TurnHandoffState: GKState {
     // MARK: - Exit
 
     override func willExit(to nextState: GKState) {
+        GameManager.shared.tapContext = .none
         if let token = handoffToken {
             EventBus.shared.unsubscribe(token)
         }

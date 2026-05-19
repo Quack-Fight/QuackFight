@@ -29,7 +29,7 @@ final class UISystem {
         setupSubscriptions()
     }
     
-    private func setupSubscriptions() {
+    func setupSubscriptions() {
         EventBus.shared.subscribe(.hpChanged) { [weak self] event in
             guard let self, case .hpChanged(let playerIndex, let hp) = event else { return }
             self.hudNode?.updateHP(playerIndex: playerIndex, current: hp, max: GameConstants.maxHP)
@@ -100,7 +100,21 @@ final class UISystem {
         
         EventBus.shared.subscribe(.skillUsed) { [weak self] _ in
             guard let self else { return }
-            // Let the HUD trigger any specific animations if needed, though state is handled automatically.
+            // Let the HUD trigger any specific animations if needed.
+        }
+
+        EventBus.shared.subscribe(.gameOver) { [weak self] event in
+            guard let self, case .gameOver(let outcome) = event else { return }
+            let message = Self.outcomeMessage(outcome)
+            self.turnHandoff?.showInstruction(message)
+        }
+    }
+
+    private static func outcomeMessage(_ outcome: GameOutcome) -> String {
+        switch outcome {
+        case .knockout(let winner):     return "Player \(winner + 1) Wins!\nTap to Rematch"
+        case .roundCapWin(let winner):  return "Player \(winner + 1) Wins!\nTap to Rematch"
+        case .draw:                      return "Draw!\nTap to Rematch"
         }
     }
 }

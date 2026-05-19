@@ -40,11 +40,11 @@ final class FixedHitSystem {
         let fixedDamage = DamageCycleManager.shared.currentDamage
         
         // Apply damage to opponent
+        let opponentIndex = GameManager.shared.nextPlayerIndex
         if let healthComp = opponent.component(ofType: HealthComponent.self) {
             healthComp.takeDamage(fixedDamage)
-            
-            // Post event for UI and WinCheckSystem
-            EventBus.shared.post(.damageApplied(amount: fixedDamage, to: GameManager.shared.nextPlayerIndex))
+            EventBus.shared.post(.damageApplied(amount: fixedDamage, to: opponentIndex))
+            EventBus.shared.post(.hpChanged(playerIndex: opponentIndex, hp: healthComp.hp))
         }
         
         // Consume the skill permanently

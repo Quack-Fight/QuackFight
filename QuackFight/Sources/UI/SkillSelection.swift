@@ -49,9 +49,9 @@ class SkillSelection: SKNode {
     
     private func getAssetPrefix(for skill: SkillType) -> String {
         switch skill {
-        case .damageMultiplier: return "2x"
-        case .heal: return "heal"
-        case .fixedHit: return "auto hit"
+        case .damageMultiplier: return "2xSkill"
+        case .heal:             return "Heal"
+        case .fixedHit:         return "FixedHit"
         }
     }
     
@@ -61,10 +61,10 @@ class SkillSelection: SKNode {
         
         for (skill, button) in skillButtons {
             if availableSkills.contains(skill) {
-                button.texture = SKTexture(imageNamed: getAssetPrefix(for: skill))
+                button.texture = SKTexture(imageNamed: getAssetPrefix(for: skill) + "_Enabled")
                 button.alpha = 1.0
             } else {
-                button.texture = SKTexture(imageNamed: getAssetPrefix(for: skill) + " disabled")
+                button.texture = SKTexture(imageNamed: getAssetPrefix(for: skill) + "_Disabled")
                 button.alpha = 0.4
             }
         }

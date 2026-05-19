@@ -47,6 +47,7 @@ enum TapContext {
     case aiming
     case power
     case turnHandoff
+    case gameOver
 }
 
 // MARK: - Camera

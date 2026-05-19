@@ -37,9 +37,11 @@ final class HealSystem {
         let healAmount = DamageCycleManager.shared.currentDamage
         
         // Apply heal
+        let activeIndex = GameManager.shared.activePlayerIndex
         if let healthComp = activePlayer.component(ofType: HealthComponent.self) {
             healthComp.heal(healAmount)
-            EventBus.shared.post(.healApplied(amount: healAmount, to: GameManager.shared.activePlayerIndex))
+            EventBus.shared.post(.healApplied(amount: healAmount, to: activeIndex))
+            EventBus.shared.post(.hpChanged(playerIndex: activeIndex, hp: healthComp.hp))
         }
         
         // Consume the skill permanently

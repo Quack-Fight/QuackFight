@@ -57,6 +57,16 @@ final class CameraSystem {
 
     // MARK: - Public Camera Controls
 
+    /// Start the Round 1 preview pan: snap camera to Player 2's position,
+    /// then let `update(deltaTime:)` lerp it across to Player 1.
+    /// Called by `PreviewPanState.didEnter`.
+    func startPreviewPan() {
+        guard let cameraComp = currentCameraComponent() else { return }
+        // Snap to P2 so the pan begins from the correct side.
+        cameraComp.node.position = GameManager.shared.player(index: 1).throwOrigin
+        cameraComp.state = .previewPan
+    }
+
     /// Mengubah camera ke mode mengikuti projectile.
     ///
     /// Function ini tidak langsung menggerakkan camera.
