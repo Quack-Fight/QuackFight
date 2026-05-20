@@ -200,7 +200,10 @@ class GameScene: SKScene {
         // State machine first — may change which systems are relevant this frame.
         GameStateMachine.shared.update(deltaTime: dt)
 
-        // Physics before hit-detection: positions must be updated before collision checks.
+        GyroscopeSystem.shared.update(deltaTime: dt)
+        TrajectoryRenderSystem.shared.update(deltaTime: dt)
+
+        // Turn timer.
         TurnSystem.shared.update(deltaTime: dt)
 
         // Physics before hit-detection:
