@@ -39,7 +39,7 @@ final class UISystem {
         
         EventBus.shared.subscribe(.timerTick) { [weak self] event in
             guard let self, case .timerTick(let remaining) = event else { return }
-            let maxTime: TimeInterval = 5.0 // Aim/Power time limit
+            let maxTime: TimeInterval = 5.0
             self.hudNode?.updateTimer(percentage: CGFloat(remaining / maxTime))
         }
         
@@ -106,22 +106,36 @@ final class UISystem {
             }
         }
         
-        EventBus.shared.subscribe(.skillUsed) { _ in
-            // Let the HUD trigger any specific animations if needed.
+        EventBus.shared.subscribe(.skillUsed) { [weak self] _ in
+            guard self != nil else { return }
+            // Let the HUD trigger any specific animations if needed, though state is handled automatically.
         }
-
+        
         EventBus.shared.subscribe(.gameOver) { [weak self] event in
             guard let self, case .gameOver(let outcome) = event else { return }
-            let message = Self.outcomeMessage(outcome)
-            self.turnHandoff?.showInstruction(message)
-        }
-    }
-
-    private static func outcomeMessage(_ outcome: GameOutcome) -> String {
-        switch outcome {
-        case .knockout(let winner):     return "Player \(winner + 1) Wins!\nTap to Rematch"
-        case .roundCapWin(let winner):  return "Player \(winner + 1) Wins!\nTap to Rematch"
-        case .draw:                      return "Draw!\nTap to Rematch"
+            guard let scene = self.hudNode?.scene, let view = scene.view else { return }
+            
+            self.hudNode?.hide()
+            self.skillSelection?.hide()
+            self.powerBar?.hide()
+            
+            let gameOverOverlay = GameOverScene(size: scene.size, outcome: outcome)
+            
+            gameOverOverlay.onRematchTapped = {
+                let newGameScene = GameScene(size: view.bounds.size)
+                newGameScene.scaleMode = .aspectFill
+                let transition = SKTransition.fade(withDuration: 0.6)
+                view.presentScene(newGameScene, transition: transition)
+            }
+            
+            gameOverOverlay.onMenuTapped = {
+                let menuScene = MenuScene(size: view.bounds.size)
+                menuScene.scaleMode = .aspectFill
+                let transition = SKTransition.fade(withDuration: 0.6)
+                view.presentScene(menuScene, transition: transition)
+            }
+            
+            scene.camera?.addChild(gameOverOverlay)
         }
     }
 }

@@ -63,6 +63,7 @@ class SkillSelection: SKNode {
     func show(forPlayer index: Int, availableSkills: Set<SkillType>) {
         self.playerIndex = index
         self.availableSkills = availableSkills
+        isHidden = false
         
         for (skill, button) in skillButtons {
             if availableSkills.contains(skill) {
@@ -74,11 +75,10 @@ class SkillSelection: SKNode {
             }
         }
         
-        // Don't fade the whole node, just update visually
     }
     
     func hide() {
-        // No-op since skills are always visible
+        isHidden = true
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
