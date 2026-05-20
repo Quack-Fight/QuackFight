@@ -62,6 +62,7 @@ final class InitState: GKState {
         GyroscopeSystem.shared.setupSubscriptions()
         VoiceInputSystem.shared.setupSubscriptions()
         UISystem.shared.setupSubscriptions()
+        AudioManager.shared.setupSubscriptions()
 
         // 5. Branch: first match shows Round 1 camera preview pan; rematches skip it.
         let isFirst = GameStateMachine.shared.isFirstMatch

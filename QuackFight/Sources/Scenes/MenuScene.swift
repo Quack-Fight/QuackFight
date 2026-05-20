@@ -26,6 +26,7 @@ class MenuScene: SKScene {
     private var localButton: SKSpriteNode!
     private var onlineButton: SKSpriteNode!
     private var titleNode: SKSpriteNode!
+    private var isStartingGame = false
     
     //    private let systemRoundedFont = ".SFProRounded-Bold"
     
@@ -118,6 +119,10 @@ class MenuScene: SKScene {
     }
     
     private func handleStartButtonTap() {
+        // Play button click SFX langsung dari MenuScene
+        // karena GameManager.shared.scene belum tentu ada saat masih di menu.
+        run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
+
         // Memberikan umpan balik visual (juiciness): tombol sedikit mengecil lalu membesar
         let scaleDown = SKAction.scale(to: 0.20, duration: 0.08)
         let scaleUp = SKAction.scale(to: 0.28, duration: 0.08)
