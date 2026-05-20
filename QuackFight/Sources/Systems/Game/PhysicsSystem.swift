@@ -98,20 +98,21 @@ final class PhysicsSystem: GKComponentSystem<TransformComponent> {
     /// Mengecek apakah projectile keluar dari arena.
     ///
     /// Rule:
-    /// - kiri  = miss
-    /// - kanan = miss
-    /// - bawah = miss
+    /// - kiri  = miss (past left edge of world)
+    /// - kanan = miss (past right edge of world)
+    /// - bawah = miss (hit the invisible floor / ground surface)
     /// - atas tidak dihitung miss, supaya high arc tetap boleh
+    ///
+    /// IMPORTANT: Uses playableWorldWidth (6× viewport), NOT scene.size.width.
+    /// Players are placed across the full world width, so the right bound must
+    /// cover the entire playable area or projectiles heading toward Player 2
+    /// will be destroyed prematurely.
     private func isOutOfBounds(_ position: CGPoint) -> Bool {
-        let sceneWidth = GameManager.shared.scene?.playableWorldWidth ?? 2000
+        let worldWidth = GameManager.shared.scene?.playableWorldWidth
+            ?? (GameManager.shared.scene?.size.width ?? 2000)
 
-        // Catatan:
-        // Ini memakai asumsi posisi X dunia dimulai dari 0 sampai sceneWidth.
-        // Kalau scene kamu pakai origin tengah, batasnya perlu diganti ke:
-        // leftBound = -sceneWidth / 2
-        // rightBound = sceneWidth / 2
         let leftBound: CGFloat = -100
-        let rightBound: CGFloat = sceneWidth + 100
+        let rightBound: CGFloat = worldWidth + 100
         let bottomBound = GameConstants.groundY
 
         let isPastLeft = position.x < leftBound

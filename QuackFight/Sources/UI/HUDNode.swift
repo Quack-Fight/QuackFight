@@ -63,9 +63,9 @@ class HUDNode: SKNode {
         roundCycle.position = CGPoint(x: 0, y: halfH - topInset - 8)
         roundCycle.zPosition = 901
         
-        // Setup Round Label
+        // Setup Round Label (shows current round number, updated dynamically)
         roundLabel = SKLabelNode(fontNamed: "SFProRounded-Black")
-        roundLabel.text = "12"
+        roundLabel.text = "1"
         roundLabel.fontSize = 30
         roundLabel.fontColor = SKColor(named: "YellowQuack") ?? .systemYellow
         roundLabel.verticalAlignmentMode = .center
@@ -134,12 +134,22 @@ class HUDNode: SKNode {
         }
     }
     
-    func updateRoundCounter(round: Int) {
+    /// Updates the round label to show the current round number.
+    ///
+    /// A "round" = both players take a turn = 2 individual player-turns.
+    /// So round = (turnsElapsed / 2) + 1, capped at maxRounds / 2.
+    func updateRoundCounter(turnsElapsed: Int) {
+        let round = (turnsElapsed / 2) + 1
         roundLabel.text = "\(round)"
     }
 
-    func updateCountdown(remaining: TimeInterval) {
-        roundLabel.text = "\(max(0, Int(ceil(remaining))))"
+    /// Updates the cycle icon to reflect the current weapon cycle.
+    /// - Position 0 → "Cycle1" (Bread, dmg 10)
+    /// - Position 1 → "Cycle2" (Bread, dmg 10)
+    /// - Position 2 → "Cycle3" (Toaster, dmg 15)
+    func updateCycle(position: Int) {
+        let assetName = "Cycle\(position + 1)"
+        roundCycle.texture = SKTexture(imageNamed: assetName)
     }
     
     func showActivePlayerGlow(playerIndex: Int) {

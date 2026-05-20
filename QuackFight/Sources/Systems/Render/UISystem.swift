@@ -41,7 +41,6 @@ final class UISystem {
             guard let self, case .timerTick(let remaining) = event else { return }
             let maxTime: TimeInterval = 5.0 // Aim/Power time limit
             self.hudNode?.updateTimer(percentage: CGFloat(remaining / maxTime))
-            self.hudNode?.updateCountdown(remaining: remaining)
         }
         
         EventBus.shared.subscribe(.damageApplied) { [weak self] event in
@@ -56,7 +55,12 @@ final class UISystem {
         
         EventBus.shared.subscribe(.roundCountUpdated) { [weak self] event in
             guard let self, case .roundCountUpdated(let turn, _) = event else { return }
-            self.hudNode?.updateRoundCounter(round: turn)
+            self.hudNode?.updateRoundCounter(turnsElapsed: turn)
+        }
+        
+        EventBus.shared.subscribe(.cycleAdvanced) { [weak self] _ in
+            guard let self else { return }
+            self.hudNode?.updateCycle(position: DamageCycleManager.shared.position)
         }
         
         EventBus.shared.subscribe(.showTurnHandoff) { [weak self] event in

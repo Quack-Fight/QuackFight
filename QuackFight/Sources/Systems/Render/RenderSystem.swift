@@ -40,10 +40,8 @@ final class RenderSystem {
             // 1. Sync Position
             spriteComp.node.position = transformComp.position
             
-            // 2. Sync Facing (PlayerEntity specific)
-            if let player = entity as? PlayerEntity {
-                spriteComp.node.xScale = abs(spriteComp.node.xScale) * player.facing
-            }
+            // 2. Player assets are pre-oriented (Goose faces right, Duck faces left).
+            // No xScale flip needed. PlayerEntity.facing is used only for throw direction.
             
             // 3. Sync Rotation
             // If the entity has velocity (e.g. Bread), point it along its trajectory.

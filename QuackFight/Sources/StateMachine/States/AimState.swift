@@ -46,6 +46,12 @@ final class AimState: GKState {
     // MARK: - Entry
 
     override func didEnter(from previousState: GKState?) {
+        // Ensure the camera tracks the active player at the start of every turn.
+        // This handles all entry paths (ThrowResolve, HealResolve, FixedHitResolve,
+        // PreviewPan, InitState) and reads the player's live TransformComponent
+        // position, so knockback-displaced players are followed correctly.
+        CameraSystem.shared.returnToPlayer(index: GameManager.shared.activePlayerIndex)
+
         // Reset input, then set phase to .aiming so GyroscopeSystem is allowed to write liveAngle.
         let inputState = GameManager.shared.activePlayer.component(ofType: InputStateComponent.self)
         inputState?.reset()

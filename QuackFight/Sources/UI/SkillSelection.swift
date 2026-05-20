@@ -20,7 +20,7 @@ class SkillSelection: SKNode {
         let buttonSide = min(size.width * 0.25, bottomHUDHeight * 0.58)
         buttonSize = CGSize(width: buttonSide, height: buttonSide)
         container = SKNode()
-        container.zPosition = 2001
+        container.zPosition = 902
         
         // Position container at bottom HUD area
         container.position = CGPoint(x: 0, y: -size.height / 2.0 + bottomHUDHeight * 0.42)

@@ -17,7 +17,9 @@ import GameplayKit
 //             icon returns to an un-used appearance (skill NOT consumed on miss).
 // willExit  → Overlay slides out. The next player's name/colour highlights.
 
-/// Freeze frame between turns: shows who goes next and waits for a tap to continue.
+/// Brief overlay between turns showing "Goose's Turn" / "Duck's Turn".
+///
+/// Auto-dismisses after a short delay (GDD: no tap required).
 ///
 /// ## Responsibilities (in order)
 /// 1. **Advance damage cycle** — if Player 2 (index 1) just finished, one full round
@@ -26,10 +28,9 @@ import GameplayKit
 ///    player-turns and posts `.roundCountUpdated` so the HUD updates.
 /// 3. **Show handoff overlay** — posts `.showTurnHandoff(nextPlayerIndex:)` so `UISystem`
 ///    displays the "Player X's Turn" screen over the arena.
-/// 4. **Wait for tap** — subscribes to `.handoffDismissed` (posted by `TapInputSystem`
-///    when the player taps to continue).
+/// 4. **Auto-dismiss** — after `handoffDisplayDuration` seconds, automatically continue.
 /// 5. **On dismiss**: switch the active player, then check the round cap:
-///    - Cap not reached → `SkillSelectState` (normal next turn).
+///    - Cap not reached → `AimState` (normal next turn).
 ///    - Cap reached     → evaluate HP to set `GameManager.lastOutcome`, then `RoundOverState`.
 ///
 /// ## Why advance cycle before switchPlayer?
@@ -38,9 +39,15 @@ import GameplayKit
 /// changes `activePlayerIndex` to the next player, so it must happen after the check.
 final class TurnHandoffState: GKState {
 
-    // MARK: - Tokens
+    // MARK: - Configuration
 
-    private var handoffToken: SubscriptionToken?
+    /// How long the "Player X's Turn" overlay stays visible before auto-dismissing.
+    private let handoffDisplayDuration: TimeInterval = 2.0
+
+    // MARK: - State
+
+    /// Guard against the dismiss firing after the state has already exited.
+    private var dismissed = false
 
     // MARK: - Valid Transitions
 
@@ -51,6 +58,8 @@ final class TurnHandoffState: GKState {
     // MARK: - Entry
 
     override func didEnter(from previousState: GKState?) {
+        dismissed = false
+
         // Step 1: Advance the damage cycle at the end of each complete round (P2 just finished).
         if GameManager.shared.activePlayerIndex == 1 {
             DamageCycleManager.shared.advance()
@@ -63,11 +72,9 @@ final class TurnHandoffState: GKState {
         let nextIndex = GameManager.shared.nextPlayerIndex
         EventBus.shared.post(.showTurnHandoff(nextPlayerIndex: nextIndex))
 
-        // Step 4: Enable tap so TapInputSystem posts .handoffDismissed.
-        GameManager.shared.tapContext = .turnHandoff
-
-        handoffToken = EventBus.shared.subscribe(.handoffDismissed) { [weak self] _ in
-            guard let self else { return }
+        // Step 4: Auto-dismiss after the display duration (no tap required per GDD §3.1).
+        DispatchQueue.main.asyncAfter(deadline: .now() + handoffDisplayDuration) { [weak self] in
+            guard let self, !self.dismissed else { return }
             self.handoffDismissed()
         }
     }
@@ -75,11 +82,7 @@ final class TurnHandoffState: GKState {
     // MARK: - Exit
 
     override func willExit(to nextState: GKState) {
-        GameManager.shared.tapContext = .none
-        if let token = handoffToken {
-            EventBus.shared.unsubscribe(token)
-        }
-        handoffToken = nil
+        dismissed = true
     }
 
     // MARK: - Dismiss Logic
