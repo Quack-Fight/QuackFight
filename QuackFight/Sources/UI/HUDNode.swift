@@ -142,7 +142,7 @@ class HUDNode: SKNode {
         let round = (turnsElapsed / 2) + 1
         roundLabel.text = "\(round)"
     }
-
+    
     /// Updates the cycle icon to reflect the current weapon cycle.
     /// - Position 0 → "Cycle1" (Bread, dmg 10)
     /// - Position 1 → "Cycle2" (Bread, dmg 10)
@@ -164,6 +164,10 @@ class HUDNode: SKNode {
             SKAction.fadeAlpha(to: 0.2, duration: 0.8)
         ])
         glow.run(SKAction.repeatForever(pulse))
+    }
+    
+    func hide() {
+        isHidden = true
     }
     
     func showDamagePopup(playerIndex: Int, amount: Int) {
