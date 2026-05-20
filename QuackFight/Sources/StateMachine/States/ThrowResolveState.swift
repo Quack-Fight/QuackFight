@@ -272,7 +272,10 @@ final class ThrowResolveState: GKState {
         resolved = true
 
         consumeActiveSkillOnMiss()
-        advanceDamageCycleOnMiss()
+
+        // NOTE: DamageCycleManager.advance() is NOT called here.
+        // The cycle advances only in TurnHandoffState after P2 finishes,
+        // matching the GDD rule: "advance after each complete round."
 
         // Memberi tahu sistem lain bahwa turn throw sudah selesai.
         //
@@ -322,7 +325,7 @@ final class ThrowResolveState: GKState {
     override func willExit(to nextState: GKState) {
         unsubscribeFromEvents()
         clearProjectile()
-        CameraSystem.shared.returnToPlayer(index: GameManager.shared.activePlayerIndex)
+        CameraSystem.shared.returnToPlayer(index: GameManager.shared.nextPlayerIndex)
     }
 
     /// Melepas semua subscription EventBus yang dibuat saat `didEnter`.

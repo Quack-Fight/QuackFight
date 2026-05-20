@@ -53,14 +53,16 @@ final class InitState: GKState {
 
         // 4. Re-wire system subscriptions now that the bus is clean.
         //    Each system exposes setupSubscriptions() for this purpose.
-        //    TODO: Call setupSubscriptions() on each system singleton as they are implemented.
-        //    DamageSystem.shared.setupSubscriptions()
-        //    ThrowSystem.shared.setupSubscriptions()
-        //    HealSystem.shared.setupSubscriptions()
-        //    FixedHitSystem.shared.setupSubscriptions()
+        //    Order doesn't matter here — all handlers are registered before
+        //    the first event fires in PreviewPanState / AimState.
+        DamageSystem.shared.setupSubscriptions()
+        HealSystem.shared.setupSubscriptions()
+        FixedHitSystem.shared.setupSubscriptions()
         WinCheckSystem.shared.setupSubscriptions()
-        //    UISystem.shared.setupSubscriptions()
-        //    CameraSystem.shared.setupSubscriptions()
+        GyroscopeSystem.shared.setupSubscriptions()
+        VoiceInputSystem.shared.setupSubscriptions()
+        UISystem.shared.setupSubscriptions()
+        AudioManager.shared.setupSubscriptions()
 
         // 5. Branch: first match shows Round 1 camera preview pan; rematches skip it.
         let isFirst = GameStateMachine.shared.isFirstMatch

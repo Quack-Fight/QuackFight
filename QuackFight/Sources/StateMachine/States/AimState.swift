@@ -46,12 +46,23 @@ final class AimState: GKState {
     // MARK: - Entry
 
     override func didEnter(from previousState: GKState?) {
-        // Reset the active player's input so a fresh aim begins.
-        GameManager.shared.activePlayer
-            .component(ofType: InputStateComponent.self)?.reset()
+        // Ensure the camera tracks the active player at the start of every turn.
+        // This handles all entry paths (ThrowResolve, HealResolve, FixedHitResolve,
+        // PreviewPan, InitState) and reads the player's live TransformComponent
+        // position, so knockback-displaced players are followed correctly.
+        CameraSystem.shared.returnToPlayer(index: GameManager.shared.activePlayerIndex)
 
-        // Activate gyroscope input (writes liveAngle each CMMotionManager update).
-        // TODO: GyroscopeSystem.shared.activate()
+        // Reset input, then set phase to .aiming so GyroscopeSystem is allowed to write liveAngle.
+        let inputState = GameManager.shared.activePlayer.component(ofType: InputStateComponent.self)
+        inputState?.reset()
+        inputState?.phase = .aiming
+
+        // Activate gyroscope — reads device tilt and writes liveAngle each CMMotionManager callback.
+        GyroscopeSystem.shared.activate()
+        EventBus.shared.post(.showInstruction("Tilt to Aim"))
+
+        // Enable tap-to-lock so TapInputSystem posts .aimLocked on touch.
+        GameManager.shared.tapContext = .aiming
 
         // Start the 5-second aim timer (TurnSystem posts .timerTick + .aimLocked on timeout).
         TurnSystem.shared.startAimTimer()
@@ -87,9 +98,9 @@ final class AimState: GKState {
     // MARK: - Exit
 
     override func willExit(to nextState: GKState) {
-        // Stop gyroscope and timer before leaving.
-        // TODO: GyroscopeSystem.shared.deactivate()
+        GyroscopeSystem.shared.deactivate()
         TurnSystem.shared.stopTimer()
+        GameManager.shared.tapContext = .none
 
         if let token = aimToken {
             EventBus.shared.unsubscribe(token)

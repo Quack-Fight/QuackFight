@@ -42,6 +42,9 @@ final class CameraSystem {
     /// Nilai besar = camera lebih cepat mengikuti target.
     private let cameraFollowLerp: CGFloat = 0.12
 
+    /// Lerp factor for following the active player (smooth tracking for knockback).
+    private let cameraPlayerLerp: CGFloat = 0.15
+
     /// Return dibuat lebih pelan agar terasa cinematic.
     private let cameraReturnLerp: CGFloat = 0.08
 
@@ -56,6 +59,16 @@ final class CameraSystem {
 
 
     // MARK: - Public Camera Controls
+
+    /// Start the Round 1 preview pan: snap camera to Player 2's position,
+    /// then let `update(deltaTime:)` lerp it across to Player 1.
+    /// Called by `PreviewPanState.didEnter`.
+    func startPreviewPan() {
+        guard let cameraComp = currentCameraComponent() else { return }
+        // Snap to P2 so the pan begins from the correct side.
+        cameraComp.node.position = playerCameraTarget(index: 1)
+        cameraComp.state = .previewPan
+    }
 
     /// Mengubah camera ke mode mengikuti projectile.
     ///
@@ -95,21 +108,26 @@ final class CameraSystem {
 
         switch cameraComp.state {
         case .staticOnPlayer(let index):
-            let player = GameManager.shared.player(index: index)
-            cameraNode.position = player.throwOrigin
+            // Smooth-follow the player's live position (supports knockback).
+            let target = playerCameraTarget(index: index)
+            cameraNode.position = clampedCameraPosition(CGPoint.lerp(
+                from: cameraNode.position,
+                to: target,
+                t: cameraPlayerLerp
+            ))
 
         case .previewPan:
-            let p1 = GameManager.shared.player(index: 0)
-            let p2 = GameManager.shared.player(index: 1)
+            let p1Target = playerCameraTarget(index: 0)
+            let p2Target = playerCameraTarget(index: 1)
 
             panProgress += deltaTime
             let t = min(CGFloat(panProgress / previewPanDuration), 1.0)
 
-            cameraNode.position = CGPoint.lerp(
-                from: p2.throwOrigin,
-                to: p1.throwOrigin,
+            cameraNode.position = clampedCameraPosition(CGPoint.lerp(
+                from: p2Target,
+                to: p1Target,
                 t: t
-            )
+            ))
 
             if t >= 1.0 {
                 cameraComp.state = .staticOnPlayer(index: 0)
@@ -123,24 +141,23 @@ final class CameraSystem {
                 return
             }
 
-            cameraNode.position = CGPoint.lerp(
+            cameraNode.position = clampedCameraPosition(CGPoint.lerp(
                 from: cameraNode.position,
                 to: targetPos,
                 t: cameraFollowLerp
-            )
+            ))
 
         case .returnToPlayer(let index):
-            let player = GameManager.shared.player(index: index)
-            let targetPos = player.throwOrigin
+            let targetPos = playerCameraTarget(index: index)
 
-            cameraNode.position = CGPoint.lerp(
+            cameraNode.position = clampedCameraPosition(CGPoint.lerp(
                 from: cameraNode.position,
                 to: targetPos,
                 t: cameraReturnLerp
-            )
+            ))
 
             if cameraNode.position.distance(to: targetPos) < 4.0 {
-                cameraNode.position = targetPos
+                cameraNode.position = clampedCameraPosition(targetPos)
                 cameraComp.state = .staticOnPlayer(index: index)
                 EventBus.shared.post(.cameraReturnComplete)
             }
@@ -160,5 +177,38 @@ final class CameraSystem {
         }
 
         return cameraComp
+    }
+
+    /// Compute the camera target for a given player.
+    /// Reads live position from TransformComponent (supports knockback)
+    /// and applies the configurable Y offset for camera height tuning.
+    private func playerCameraTarget(index: Int) -> CGPoint {
+        let player = GameManager.shared.player(index: index)
+        let pos = player.component(ofType: TransformComponent.self)?.position
+            ?? player.throwOrigin
+        return CGPoint(
+            x: pos.x,
+            y: pos.y + GameConstants.cameraPlayerYOffset
+        )
+    }
+
+    private func clampedCameraPosition(_ target: CGPoint) -> CGPoint {
+        guard let scene = GameManager.shared.scene else { return target }
+
+        let halfW = scene.size.width / 2.0
+        let halfH = scene.size.height / 2.0
+
+        // X clamp: keep viewport within world bounds
+        let leftX = halfW
+        let rightX = max(leftX, scene.playableWorldWidth - halfW)
+        let x = min(max(target.x, leftX), rightX)
+
+        // Y clamp: keep viewport within background top edge only.
+        // Bottom is unclamped so the camera can look below the background
+        // to frame players above the large bottom HUD overlay.
+        let topY = max(halfH, scene.playableWorldHeight - halfH)
+        let y = min(target.y, topY)
+
+        return CGPoint(x: x, y: y)
     }
 }

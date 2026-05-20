@@ -38,9 +38,9 @@ final class PreviewPanState: GKState {
     // MARK: - Entry
 
     override func didEnter(from previousState: GKState?) {
-        // Tell CameraSystem to begin the Round 1 pan (Player 2's side → Player 1's side).
-        // TODO: CameraSystem.shared.setState(.previewPan)
-        // CameraSystem will post .previewPanComplete when the animation finishes.
+        // Start the Round 1 pan: snaps camera to P2, then lerps to P1.
+        // CameraSystem posts .previewPanComplete when the animation finishes.
+        CameraSystem.shared.startPreviewPan()
 
         panToken = EventBus.shared.subscribe(.previewPanComplete) { [weak self] _ in
             guard self != nil else { return }

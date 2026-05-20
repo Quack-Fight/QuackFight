@@ -15,35 +15,22 @@ class GameViewController: UIViewController {
         super.viewDidLoad()
         
         if let view = self.view as? SKView {
-            // Attempt to load 'GameScene.sks' as a GKScene
-            if let scene = GKScene(fileNamed: "GameScene"), let sceneNode = scene.rootNode as? GameScene {
-                // Copy gameplay relatedx content over to the scene
-                sceneNode.entities = scene.entities
-                sceneNode.graphs = scene.graphs
-                sceneNode.scaleMode = .aspectFill
-                
-                view.presentScene(sceneNode)
-                view.ignoresSiblingOrder = true
-                view.showsFPS = true
-                view.showsNodeCount = true
-            } else {
-                // Fallback if GameScene.sks is missing or its Custom Class isn't set
-                let fallbackScene = GameScene(size: view.bounds.size)
-                fallbackScene.scaleMode = .aspectFill
-                view.presentScene(fallbackScene)
-                view.ignoresSiblingOrder = true
-                view.showsFPS = true
-                view.showsNodeCount = true
-            }
+            
+            // Langsung memuat MenuScene saat aplikasi pertama kali dibuka
+            let menuScene = MenuScene(size: view.bounds.size)
+            menuScene.scaleMode = .aspectFill
+            
+            view.presentScene(menuScene)
+            view.ignoresSiblingOrder = true
+            
+            // Debug info bisa dinyalakan lagi selama development berjalan
+            view.showsFPS = true
+            view.showsNodeCount = true
         }
     }
-
+    
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            return .allButUpsideDown
-        } else {
-            return .all
-        }
+        return UIDevice.current.userInterfaceIdiom == .phone ? .portrait : .all
     }
 
     override var prefersStatusBarHidden: Bool {

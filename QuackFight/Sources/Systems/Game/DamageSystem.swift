@@ -59,17 +59,15 @@ import GameplayKit
 /// - **Audio**: Impact / Hit SFX triggers.
 class DamageSystem {
 
-    /// Reference to player entities so we can look up HealthComponents.
-    private weak var player1: PlayerEntity?
-    private weak var player2: PlayerEntity?
+    static let shared = DamageSystem()
+    private init() {}
 
-    // MARK: - Init
+    // MARK: - System Lifecycle
 
-    init(player1: PlayerEntity, player2: PlayerEntity) {
-        self.player1 = player1
-        self.player2 = player2
-
-        // Reacts to: .throwResolved — subscribe ONCE at init, see doc-block above.
+    /// Re-register EventBus subscriptions. Called by `InitState` after
+    /// `clearAllSubscriptions()` wipes the previous match's handlers.
+    func setupSubscriptions() {
+        // Reacts to: .throwResolved — subscribe ONCE per match, see doc-block above.
         EventBus.shared.subscribe(.throwResolved) { [weak self] event in
             guard let self, case .throwResolved(let hit) = event, hit else { return }
             self.applyDamage()
@@ -92,11 +90,11 @@ class DamageSystem {
         }
         
         // Apply damage to opponent
+        let opponentIndex = GameManager.shared.nextPlayerIndex
         if let healthComp = opponent.component(ofType: HealthComponent.self) {
             healthComp.takeDamage(finalDamage)
-            
-            // Post event for UI and WinCheckSystem
-            EventBus.shared.post(.damageApplied(amount: finalDamage, to: GameManager.shared.nextPlayerIndex))
+            EventBus.shared.post(.damageApplied(amount: finalDamage, to: opponentIndex))
+            EventBus.shared.post(.hpChanged(playerIndex: opponentIndex, hp: healthComp.hp))
         }
         
         // Consume the skill permanently

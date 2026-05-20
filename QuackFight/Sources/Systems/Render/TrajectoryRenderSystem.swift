@@ -47,17 +47,13 @@ final class TrajectoryRenderSystem {
     private init() {
         trajectoryNode = SKShapeNode()
         
-        // --- Styling (Kriteria 4) ---
-        // Membuat tampilannya (warna, ketebalan, transparansi)
+        // Clean white dashed line styling.
+        // No strokeTexture — SpriteKit draws a solid-color stroke natively,
+        // which combined with the dashed path produces a crisp "── ── ──" look.
         trajectoryNode.strokeColor = .white
         trajectoryNode.lineWidth = 4.0
-        trajectoryNode.alpha = 0.6 // Agak transparan agar tidak menutupi karakter
-        trajectoryNode.zPosition = 10 // Pastikan garis berada di atas background
-        // Make it a dashed/dotted line
-        trajectoryNode.strokeTexture = SKTexture(imageNamed: "spark") // Optional
-        let pattern: [CGFloat] = [10.0, 10.0]
-        // Note: SKShapeNode doesn't support lineDashPattern natively unless using CGPath stroking,
-        // Actually it's easier to use CGPath(dashingWithPhase:lengths:) when drawing.
+        trajectoryNode.alpha = 0.6
+        trajectoryNode.zPosition = 10
     }
     
     /// Jangan lupa panggil ini sekali saat GameScene baru mulai dimuat (didMove)
@@ -67,48 +63,62 @@ final class TrajectoryRenderSystem {
         }
     }
 
+    /// Length of the straight aim indicator line in points.
+    private let aimLineLength: CGFloat = 200
+
+    /// Hand shoulder offset from body center (matches PlayerEntity.setupHand).
+    private let handOffsetGoose = CGPoint(x: 20, y: 15)
+    private let handOffsetDuck  = CGPoint(x: -20, y: 15)
+
+    /// Hand sprite width used to find the tip position (matches PlayerEntity).
+    private let handWidth: CGFloat = 90
+
     func update(deltaTime: TimeInterval) {
-        // 1. Kriteria: Clears path outside AimState
-        guard GameStateMachine.shared.currentState is AimState
-        else {
+        let isAiming = GameStateMachine.shared.currentState is AimState
+        let activePlayer = GameManager.shared.activePlayer
+
+        // 1. Clear path and reset hand outside AimState
+        guard isAiming else {
             trajectoryNode.path = nil
+            activePlayer.setHandAngle(nil)
             return
         }
-        
-        // cari pemain yg lagi jalan
-        let activePlayer = GameManager.shared.activePlayer
         
         guard let inputComp = activePlayer.component(ofType: InputStateComponent.self),
               let transformComp = activePlayer.component(ofType: TransformComponent.self) else {
             return
         }
         
-        // 2. Kriteria: Reads liveAngle from active player's InputStateComponent
+        // 2. Read aim angle and player data
         let liveAngle = inputComp.liveAngle
-        let originPosition = transformComp.position
-        let facingDirection = activePlayer.facing
+        let playerPos = transformComp.position
+        let facing = activePlayer.facing  // +1 for Goose, -1 for Duck
+
+        // 3. Rotate the player's hand to match the aim angle
+        activePlayer.setHandAngle(liveAngle - 0.27)
         
-        // 3. Kriteria: calls PhysicsEngine.predictTrajectory(power: 0.7)
-        let predictedPoints = PhysicsEngine.predictTrajectory(
-            angle: Double(liveAngle),
-            power: 0.7,
-            origin: originPosition,
-            facing: facingDirection
-        )
-        
-        // 4. Kriteria: draws as SKShapeNode
+        // 4. Calculate the aim direction vector
+        //    Goose (facing +1): aims right → (cos(angle), sin(angle))
+        //    Duck  (facing -1): aims left  → (-cos(angle), sin(angle))
+        let dirX = facing * CGFloat(cos(liveAngle))
+        let dirY = CGFloat(sin(liveAngle))
+
+        // 5. Find the hand tip position in world space
+        //    handTip = playerPos + shoulderOffset + handWidth * aimDirection
+        let shoulderOffset = (facing > 0) ? handOffsetGoose : handOffsetDuck
+        let shoulderX = playerPos.x + shoulderOffset.x
+        let shoulderY = playerPos.y + shoulderOffset.y
+        let tipX = shoulderX + handWidth * dirX
+        let tipY = shoulderY + handWidth * dirY
+
+        // 6. Draw a straight dashed line from hand tip extending in the aim direction
+        let endX = tipX + aimLineLength * dirX
+        let endY = tipY + aimLineLength * dirY
+
         let path = CGMutablePath()
-        
-        if let firstPoint = predictedPoints.first {
-            // Taruh pena di titik pertama (tangan pemain)
-            path.move(to: firstPoint)
-            
-            // Tarik garis ke titik-titik selanjutnya
-            for point in predictedPoints.dropFirst() {
-                path.addLine(to: point)
-            }
-        }
-        
+        path.move(to: CGPoint(x: tipX, y: tipY))
+        path.addLine(to: CGPoint(x: endX, y: endY))
+
         let dashedPath = path.copy(dashingWithPhase: 0, lengths: [10.0, 10.0])
         trajectoryNode.path = dashedPath
     }

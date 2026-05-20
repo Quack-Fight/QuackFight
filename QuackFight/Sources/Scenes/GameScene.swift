@@ -9,83 +9,230 @@ import SpriteKit
 import GameplayKit
 
 class GameScene: SKScene {
-    
+
     var entities = [GKEntity]()
     var graphs = [String : GKGraph]()
-    
-    private var lastUpdateTime : TimeInterval = 0
-    
+    private(set) var playableWorldWidth: CGFloat = 0
+    private(set) var playableWorldHeight: CGFloat = 0
+    private var backgroundLayers: [SKSpriteNode] = []
+
+    private var lastUpdateTime: TimeInterval = 0
+
+    // MARK: - GKComponentSystem Array (#116)
+    //
+    // addComponent(foundIn:) scans an entity for a component matching the system's
+    // componentClass and registers it automatically — no manual cast required.
+    //
+    // Update order constraint (#60):
+    // PhysicsSystem must precede HitDetectionSystem so collision checks always
+    // see the projectile's already-advanced position. PhysicsSystem is listed
+    // first here so registerEntity wires it before HitDetectionSystem.
+    //
+    // ObjC generic erasure: GKComponentSystem<T> is the same ObjC class regardless of T,
+    // so unsafeBitCast is safe here where as! would fail Swift's runtime type check.
+    private lazy var componentSystems: [GKComponentSystem<GKComponent>] = [
+        unsafeBitCast(PhysicsSystem.shared,  to: GKComponentSystem<GKComponent>.self),
+        unsafeBitCast(TapInputSystem.shared, to: GKComponentSystem<GKComponent>.self)
+    ]
+
+    // MARK: - Scene Lifecycle
+
     override func didMove(to view: SKView) {
         self.lastUpdateTime = 0
-        
-        // 1. Setup Camera
+
+        // Origin at bottom-left so x ∈ [0, sceneWidth] and y ∈ [0, sceneHeight],
+        // matching the physics bounds in PhysicsSystem and GameConstants.groundY = 0.
+        self.anchorPoint = CGPoint(x: 0, y: 0)
+
+        setupBackground()
+
+        // 1. Camera must exist before players so camera-related systems can reference it.
         let cameraEntity = CameraEntity(scene: self)
-        
-        // 2. Setup Players
+
+        // 2. Create both players.
         let p1 = PlayerEntity(playerIndex: 0, scene: self)
         let p2 = PlayerEntity(playerIndex: 1, scene: self)
-        
+
+        // 3. Register players and scene in GameManager.
+        //
+        // This is important because AudioManager.playSFX uses:
+        // GameManager.shared.scene
         GameManager.shared.registerPlayers(p1, p2, scene: self)
-        
-        // 3. Setup UI and attach to Camera
+
+        // 4. Setup UI.
+        //
+        // HUD is attached to the camera node so it stays fixed on screen.
         setupUI(cameraNode: cameraEntity.cameraNode)
-        
-        // 4. Start Game State Machine
+        TrajectoryRenderSystem.shared.setup(in: self)
+
+        // 5. Start BGM.
+        //
+        // Only BGM starts here.
+        //
+        // Do NOT call AudioManager.shared.setupSubscriptions() here
+        // if InitState calls EventBus.shared.clearAllSubscriptions().
+        //
+        // SFX subscriptions should be registered in InitState AFTER clearAllSubscriptions().
+        AudioManager.shared.startBGM()
+
+        // TEMP SFX TEST:
+        // Uncomment this line only for testing.
+        // If this does not play, the .wav file is not in the app bundle / target membership.
+        //
+        // run(SKAction.playSoundFileNamed("throw.wav", waitForCompletion: false))
+
+        // 6. Start the state machine.
+        //
+        // InitState will clear and re-register EventBus subscriptions.
         GameStateMachine.shared.start()
     }
-    
+
+    private func setupBackground() {
+        let viewportWidth = self.size.width
+
+        // 1. World is multiple phone screens wide.
+        playableWorldWidth = viewportWidth * GameConstants.worldScreenMultiplier
+
+        // 2. Auto-calculate height from the background's native aspect ratio.
+        let sampleTexture = SKTexture(imageNamed: "Background1")
+        let aspectRatio = sampleTexture.size().height / sampleTexture.size().width
+        playableWorldHeight = playableWorldWidth * aspectRatio
+
+        // 3. Stack all parallax layers, back to front.
+        backgroundLayers.removeAll()
+
+        for i in 1...GameConstants.backgroundLayerCount {
+            let layer = SKSpriteNode(imageNamed: "Background\(i)")
+            layer.size = CGSize(width: playableWorldWidth, height: playableWorldHeight)
+            layer.anchorPoint = CGPoint(x: 0, y: 0)
+            layer.position = .zero
+            layer.zPosition = GameConstants.backgroundBaseZPosition + CGFloat(i)
+
+            addChild(layer)
+            backgroundLayers.append(layer)
+        }
+    }
+
+    // MARK: - Parallax
+
+    /// Updates parallax layer positions based on the current camera position.
+    ///
+    /// Called every frame after CameraSystem has moved the camera.
+    private func updateParallax() {
+        guard let cameraNode = self.camera else { return }
+
+        let cameraPos = cameraNode.position
+        let worldCenterX = playableWorldWidth / 2
+        let worldCenterY = playableWorldHeight / 2
+        let offsetX = cameraPos.x - worldCenterX
+        let offsetY = cameraPos.y - worldCenterY
+
+        let count = GameConstants.backgroundLayerCount
+
+        for (i, layer) in backgroundLayers.enumerated() {
+            // Layer 0 = farthest, gets smallest factor.
+            // Last layer = closest, gets factor 1.0.
+            let t = count > 1 ? CGFloat(i) / CGFloat(count - 1) : 1.0
+
+            let factor = GameConstants.parallaxMinFactor
+                + (1.0 - GameConstants.parallaxMinFactor) * t
+
+            layer.position.x = offsetX * (1.0 - factor)
+            layer.position.y = offsetY * (1.0 - factor)
+        }
+    }
+
     private func setupUI(cameraNode: SKCameraNode) {
         let hud = HUDNode(size: self.size)
         let powerBar = PowerBarNode()
         let turnHandoff = TurnHandoffOverlay(size: self.size)
         let skillSelection = SkillSelection(size: self.size)
-        
-        // Add all to camera so they stay on screen
+
         cameraNode.addChild(hud)
         cameraNode.addChild(powerBar)
         cameraNode.addChild(turnHandoff)
         cameraNode.addChild(skillSelection)
-        
-        // Bind UI nodes to the system
-        UISystem.shared.setup(hud: hud, powerBar: powerBar, turnHandoff: turnHandoff, skillSelection: skillSelection)
+
+        UISystem.shared.setup(
+            hud: hud,
+            powerBar: powerBar,
+            turnHandoff: turnHandoff,
+            skillSelection: skillSelection,
+            viewportSize: self.size
+        )
     }
-    
+
+    // MARK: - Input
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        TapInputSystem.shared.handleTap()
+    }
+
+    // MARK: - Game Loop
+
     override func update(_ currentTime: TimeInterval) {
-        if (self.lastUpdateTime == 0) {
+        if self.lastUpdateTime == 0 {
             self.lastUpdateTime = currentTime
         }
-        
-        let dt = currentTime - self.lastUpdateTime
-        
-        // Update state machine and systems
+
+        // Cap at 1/30 s so a long background pause doesn't produce a giant physics jump.
+        let dt = min(currentTime - self.lastUpdateTime, 1.0 / 30.0)
+        self.lastUpdateTime = currentTime
+
+        // State machine first — may change which systems are relevant this frame.
         GameStateMachine.shared.update(deltaTime: dt)
+
+        GyroscopeSystem.shared.update(deltaTime: dt)
+        TrajectoryRenderSystem.shared.update(deltaTime: dt)
+
+        // Turn timer.
         TurnSystem.shared.update(deltaTime: dt)
+
+        // Physics before hit-detection:
+        // projectile position must be updated before collision checks.
         PhysicsSystem.shared.update(deltaTime: dt)
         HitDetectionSystem.shared.update(deltaTime: dt)
+
+        // Camera after projectile movement so followBread sees the latest position.
         CameraSystem.shared.update(deltaTime: dt)
-        
-        // Update entities
-        for entity in self.entities {
+
+        // Parallax after camera movement.
+        updateParallax()
+
+        // Entity component updates.
+        for entity in entities {
             entity.update(deltaTime: dt)
         }
-        
-        // Render System (End of frame synchronization)
-        RenderSystem.shared.update(entities: self.entities, deltaTime: dt)
-        
-        self.lastUpdateTime = currentTime
+
+        // RenderSystem last:
+        // single-writer rule — only RenderSystem writes SKNode.position.
+        RenderSystem.shared.update(entities: entities, deltaTime: dt)
     }
-    
-    // MARK: - ECS Management
-    
+
+    // MARK: - ECS Management (#120)
+
+    /// Register an entity with the scene and all GKComponentSystems.
+    ///
+    /// `addComponent(foundIn:)` scans the entity for a component whose type matches
+    /// the system's `componentClass` and registers it automatically.
     func registerEntity(_ entity: GKEntity) {
-        if !entities.contains(entity) {
-            entities.append(entity)
+        guard !entities.contains(entity) else { return }
+
+        entities.append(entity)
+
+        for system in componentSystems {
+            system.addComponent(foundIn: entity)
         }
     }
-    
+
+    /// Remove an entity from the scene and all GKComponentSystems.
     func removeEntity(_ entity: GKEntity) {
-        if let index = entities.firstIndex(of: entity) {
-            entities.remove(at: index)
+        guard let index = entities.firstIndex(of: entity) else { return }
+
+        entities.remove(at: index)
+
+        for system in componentSystems {
+            system.removeComponent(foundIn: entity)
         }
     }
 }

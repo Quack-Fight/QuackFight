@@ -101,10 +101,39 @@ final class VoiceInputSystem: GKComponentSystem<InputStateComponent> {
         // Kalau sudah aktif, jangan start ulang.
         guard !isActive else { return }
 
-        // Guard sederhana kalau microphone permission belum diberikan.
-        // Permission request biasanya dilakukan di AppDelegate / GameViewController.
-        guard AVAudioSession.sharedInstance().recordPermission == .granted else {
+        switch AVAudioApplication.shared.recordPermission {
+        case .granted:
+            startListening()
+
+        case .undetermined:
+            AVAudioApplication.requestRecordPermission { [weak self] granted in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    if granted {
+                        self.startListening()
+                    } else {
+                        print("VoiceInputSystem: microphone permission denied")
+                    }
+                }
+            }
+
+        case .denied:
             print("VoiceInputSystem: microphone permission denied")
+
+        @unknown default:
+            print("VoiceInputSystem: unknown microphone permission state")
+        }
+    }
+
+    private func startListening() {
+        guard !isActive else { return }
+
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .mixWithOthers])
+            try session.setActive(true)
+        } catch {
+            print("VoiceInputSystem: failed to configure audio session - \(error)")
             return
         }
 
@@ -143,6 +172,7 @@ final class VoiceInputSystem: GKComponentSystem<InputStateComponent> {
         do {
             try audioEngine.start()
             isActive = true
+            writeLivePower(minimumPower)
         } catch {
             print("VoiceInputSystem: failed to start audio engine - \(error)")
             deactivate()
@@ -157,6 +187,7 @@ final class VoiceInputSystem: GKComponentSystem<InputStateComponent> {
 
         audioEngine.inputNode.removeTap(onBus: 0)
         audioEngine.stop()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         isActive = false
     }
 

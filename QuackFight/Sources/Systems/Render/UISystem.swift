@@ -16,20 +16,22 @@ final class UISystem {
     private var powerBar: PowerBarNode?
     private var turnHandoff: TurnHandoffOverlay?
     private var skillSelection: SkillSelection?
+    private var viewportSize: CGSize = .zero
     
     private init() {}
     
     /// Binds the system to the scene's UI nodes.
-    func setup(hud: HUDNode, powerBar: PowerBarNode, turnHandoff: TurnHandoffOverlay, skillSelection: SkillSelection) {
+    func setup(hud: HUDNode, powerBar: PowerBarNode, turnHandoff: TurnHandoffOverlay, skillSelection: SkillSelection, viewportSize: CGSize) {
         self.hudNode = hud
         self.powerBar = powerBar
         self.turnHandoff = turnHandoff
         self.skillSelection = skillSelection
+        self.viewportSize = viewportSize
         
         setupSubscriptions()
     }
     
-    private func setupSubscriptions() {
+    func setupSubscriptions() {
         EventBus.shared.subscribe(.hpChanged) { [weak self] event in
             guard let self, case .hpChanged(let playerIndex, let hp) = event else { return }
             self.hudNode?.updateHP(playerIndex: playerIndex, current: hp, max: GameConstants.maxHP)
@@ -37,7 +39,7 @@ final class UISystem {
         
         EventBus.shared.subscribe(.timerTick) { [weak self] event in
             guard let self, case .timerTick(let remaining) = event else { return }
-            let maxTime: TimeInterval = 5.0 // Aim/Power time limit
+            let maxTime: TimeInterval = 5.0
             self.hudNode?.updateTimer(percentage: CGFloat(remaining / maxTime))
         }
         
@@ -53,7 +55,12 @@ final class UISystem {
         
         EventBus.shared.subscribe(.roundCountUpdated) { [weak self] event in
             guard let self, case .roundCountUpdated(let turn, _) = event else { return }
-            self.hudNode?.updateRoundCounter(round: turn)
+            self.hudNode?.updateRoundCounter(turnsElapsed: turn)
+        }
+        
+        EventBus.shared.subscribe(.cycleAdvanced) { [weak self] _ in
+            guard let self else { return }
+            self.hudNode?.updateCycle(position: DamageCycleManager.shared.position)
         }
         
         EventBus.shared.subscribe(.showTurnHandoff) { [weak self] event in
@@ -73,6 +80,7 @@ final class UISystem {
             
             // Show power bar only if instruction is Shout!
             if text == "Shout!" {
+                self.powerBar?.positionForActivePlayer(GameManager.shared.activePlayerIndex, viewportSize: self.viewportSize)
                 self.powerBar?.show()
             } else {
                 self.powerBar?.hide()
@@ -99,8 +107,35 @@ final class UISystem {
         }
         
         EventBus.shared.subscribe(.skillUsed) { [weak self] _ in
-            guard let self else { return }
+            guard self != nil else { return }
             // Let the HUD trigger any specific animations if needed, though state is handled automatically.
+        }
+        
+        EventBus.shared.subscribe(.gameOver) { [weak self] event in
+            guard let self, case .gameOver(let outcome) = event else { return }
+            guard let scene = self.hudNode?.scene, let view = scene.view else { return }
+            
+            self.hudNode?.hide()
+            self.skillSelection?.hide()
+            self.powerBar?.hide()
+            
+            let gameOverOverlay = GameOverScene(size: scene.size, outcome: outcome)
+            
+            gameOverOverlay.onRematchTapped = {
+                let newGameScene = GameScene(size: view.bounds.size)
+                newGameScene.scaleMode = .aspectFill
+                let transition = SKTransition.fade(withDuration: 0.6)
+                view.presentScene(newGameScene, transition: transition)
+            }
+            
+            gameOverOverlay.onMenuTapped = {
+                let menuScene = MenuScene(size: view.bounds.size)
+                menuScene.scaleMode = .aspectFill
+                let transition = SKTransition.fade(withDuration: 0.6)
+                view.presentScene(menuScene, transition: transition)
+            }
+            
+            scene.camera?.addChild(gameOverOverlay)
         }
     }
 }

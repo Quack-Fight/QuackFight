@@ -41,9 +41,12 @@ final class TapInputSystem: GKComponentSystem<InputStateComponent> {
         case .turnHandoff:
             EventBus.shared.post(.handoffDismissed)
 
+        case .gameOver:
+            // Rematch: reset everything and start a new match.
+            GameManager.shared.tapContext = .none
+            GameStateMachine.shared.enter(InitState.self)
+
         case .none:
-            // Silent no-op.
-            // Tap di luar konteks yang valid tidak melakukan apa-apa.
             break
         }
     }

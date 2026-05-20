@@ -16,7 +16,7 @@ class TurnHandoffOverlay: SKNode {
         background = SKSpriteNode(color: UIColor.black.withAlphaComponent(0.6), size: size)
         
         // Title Label
-        titleLabel = SKLabelNode(fontNamed: ".SFProRounded-Bold")
+        titleLabel = SKLabelNode(fontNamed: "SFProRounded-Heavy")
         titleLabel.fontSize = 64
         titleLabel.fontColor = .white
         titleLabel.verticalAlignmentMode = .center

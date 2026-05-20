@@ -43,13 +43,18 @@ enum GameConstants {
     // MARK: - Scene Layout
 
     /// Vertical offset from the bottom where Player 1 stands.
-    static let player1YPosition: CGFloat = 250
+    static let player1YPosition: CGFloat = 150
 
     /// Vertical offset from the bottom where Player 2 stands.
-    static let player2YPosition: CGFloat = 250
+    static let player2YPosition: CGFloat = 150
 
     /// Horizontal inset from the screen edge for player placement.
     static let playerXInset: CGFloat = 300
+
+    /// Vertical offset applied to the camera when it focuses on a player.
+    /// Negative = camera looks lower, Positive = camera looks higher.
+    /// Tune this to frame the player nicely on screen.
+    static let cameraPlayerYOffset: CGFloat = 150
 
     // MARK: - Projectile
 
@@ -74,8 +79,11 @@ enum GameConstants {
     /// Maximum number of predicted trajectory points.
     static let trajectorySteps: Int = 240
 
-    /// Ground Y limit for ending trajectory prediction.
-    static let groundY: CGFloat = 0.0
+    /// Ground floor Y level — acts as an invisible floor surface.
+    /// Projectiles reaching this level are destroyed (miss).
+    /// Set to 20pt below player Y positions (150) to match the prototype's
+    /// ground surface concept. Prevents projectiles from going "underground."
+    static let groundY: CGFloat = 130.0
 
     /// Gravity vector applied to the SpriteKit physics world.
     /// This is separate from the custom deterministic PhysicsEngine gravity.
@@ -145,4 +153,22 @@ enum GameConstants {
 
     /// Default circular hitbox radius for projectile collision checks.
     static let defaultHitBoxRadius: CGFloat = 20.0
+
+    // MARK: - Background / World
+
+    /// The game world spans this many viewport widths horizontally.
+    /// 6 screens gives enough room for high-arc artillery throws.
+    static let worldScreenMultiplier: CGFloat = 6.0
+
+    /// Total number of parallax background layers (Background1…Background8).
+    static let backgroundLayerCount: Int = 8
+
+    /// Base z-position for the furthest-back layer.
+    /// Each successive layer is placed +1 above this.
+    static let backgroundBaseZPosition: CGFloat = -20
+
+    /// Parallax speed for the farthest layer (Background1).
+    /// The closest layer (Background8) always has factor 1.0.
+    /// Intermediate layers are linearly interpolated between these values.
+    static let parallaxMinFactor: CGFloat = 0.1
 }

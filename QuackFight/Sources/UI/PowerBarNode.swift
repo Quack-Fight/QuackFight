@@ -12,21 +12,22 @@ class PowerBarNode: SKNode {
     private let fillNode: SKSpriteNode
     private let micIcon: SKSpriteNode
     
-    private let maxFillHeight: CGFloat = 300.0
-    private let fillWidth: CGFloat = 40.0
+    private let maxFillHeight: CGFloat = 136.0
+    private let fillWidth: CGFloat = 28.0
     
     override init() {
         // Use the asset "Voice Input"
         background = SKSpriteNode(imageNamed: "VoiceInputBar")
         background.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        background.zPosition = 100
+        background.size = CGSize(width: 58, height: 226)
+        background.zPosition = 950
         
         // We use a white sprite and tint it for the fill
         fillNode = SKSpriteNode(color: .white, size: CGSize(width: fillWidth, height: 0))
         fillNode.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         // Position it slightly above the bottom of the background to fit within the frame visually
-        fillNode.position = CGPoint(x: 0, y: 50) 
-        fillNode.zPosition = 101
+        fillNode.position = CGPoint(x: 0, y: 58)
+        fillNode.zPosition = 951
         
         micIcon = SKSpriteNode(imageNamed: "Voice Input") // We could add a separate mic icon here if needed, but the BG might already have it.
         micIcon.isHidden = true // The background asset already has the mic on it
@@ -57,6 +58,13 @@ class PowerBarNode: SKNode {
             fillNode.color = .systemRed
         }
         fillNode.colorBlendFactor = 1.0
+    }
+
+    func positionForActivePlayer(_ playerIndex: Int, viewportSize: CGSize) {
+        let horizontalOffset = min(viewportSize.width * 0.34, 150)
+        let x = playerIndex == 0 ? -horizontalOffset : horizontalOffset
+        let y = -viewportSize.height * 0.12
+        position = CGPoint(x: x, y: y)
     }
     
     func show() {

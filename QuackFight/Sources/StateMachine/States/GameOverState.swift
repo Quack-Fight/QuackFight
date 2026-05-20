@@ -45,16 +45,17 @@ final class GameOverState: GKState {
     // MARK: - Entry
 
     override func didEnter(from previousState: GKState?) {
-        // Round-cap path: WinCheckSystem never posted .gameOver, so post it now
-        // so UISystem receives the outcome and renders the correct screen.
+        // Round-cap path: WinCheckSystem never posted .gameOver, so post it now.
         if previousState is RoundOverState {
             EventBus.shared.post(.gameOver(outcome: GameManager.shared.lastOutcome))
         }
-        // KO path: .gameOver was already posted by WinCheckSystem and received
-        // by UISystem. No second post needed.
+        // KO path: .gameOver was already posted and received by UISystem.
 
-        // TODO: UISystem subscribes to .gameOver and presents GameOverScene.
-        // When the rematch button is tapped, the presenter calls:
-        // GameStateMachine.shared.enter(InitState.self)
+        // Enable tap-to-rematch: TapInputSystem will call GameStateMachine.enter(InitState.self).
+        GameManager.shared.tapContext = .gameOver
+    }
+
+    override func willExit(to nextState: GKState) {
+        GameManager.shared.tapContext = .none
     }
 }
