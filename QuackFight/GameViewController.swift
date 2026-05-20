@@ -16,25 +16,19 @@ class GameViewController: UIViewController {
         
         if let view = self.view as? SKView {
             
-            // Opsi 1: Jika kamu punya file visual "MenuScene.sks"
-            if let menuScene = SKScene(fileNamed: "MenuScene") as? MenuScene {
-                menuScene.scaleMode = .aspectFill
-                view.presentScene(menuScene)
-            }
-            // Opsi 2: Jika MenuScene murni dari kode (tanpa .sks file)
-            else {
-                let fallbackMenu = MenuScene(size: view.bounds.size)
-                fallbackMenu.scaleMode = .aspectFill
-                view.presentScene(fallbackMenu)
-            }
+            // Langsung memuat MenuScene saat aplikasi pertama kali dibuka
+            let menuScene = MenuScene(size: view.bounds.size)
+            menuScene.scaleMode = .aspectFill
             
-            // Konfigurasi performa view
+            view.presentScene(menuScene)
             view.ignoresSiblingOrder = true
+            
+            // Debug info bisa dinyalakan lagi selama development berjalan
             view.showsFPS = true
             view.showsNodeCount = true
         }
     }
-
+    
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         if UIDevice.current.userInterfaceIdiom == .phone {
             return .allButUpsideDown

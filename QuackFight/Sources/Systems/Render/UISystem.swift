@@ -102,5 +102,28 @@ final class UISystem {
             guard let self else { return }
             // Let the HUD trigger any specific animations if needed, though state is handled automatically.
         }
+        
+        EventBus.shared.subscribe(.gameOver) { [weak self] event in
+            guard let self, case .gameOver(let outcome) = event else { return }
+            guard let scene = self.hudNode?.scene, let view = scene.view else { return }
+            
+            let gameOverOverlay = GameOverScene(size: scene.size, outcome: outcome)
+            
+            gameOverOverlay.onRematchTapped = {
+                let newGameScene = GameScene(size: view.bounds.size)
+                newGameScene.scaleMode = .aspectFill
+                let transition = SKTransition.fade(withDuration: 0.6)
+                view.presentScene(newGameScene, transition: transition)
+            }
+            
+            gameOverOverlay.onMenuTapped = {
+                let menuScene = MenuScene(size: view.bounds.size)
+                menuScene.scaleMode = .aspectFill
+                let transition = SKTransition.fade(withDuration: 0.6)
+                view.presentScene(menuScene, transition: transition)
+            }
+            
+            scene.camera?.addChild(gameOverOverlay)
+        }
     }
 }
