@@ -51,15 +51,15 @@ final class AudioManager: NSObject {
 
     /// Mengatur audio session iOS.
     ///
-    /// `.ambient` artinya audio mengikuti silent mode.
-    /// Kalau mau audio tetap bunyi walaupun silent mode aktif,
-    /// ganti `.ambient` menjadi `.playback`.
+    /// `.playAndRecord` dipakai karena game butuh microphone (VoiceInputSystem).
+    /// `.mixWithOthers` memungkinkan BGM dan SFX tetap bunyi bersamaan dengan mic.
+    /// `.defaultToSpeaker` memastikan output tetap ke speaker, bukan earpiece.
     private func configureAudioSession() {
         do {
             try AVAudioSession.sharedInstance().setCategory(
-                .ambient,
+                .playAndRecord,
                 mode: .default,
-                options: [.mixWithOthers]
+                options: [.defaultToSpeaker, .mixWithOthers]
             )
 
             try AVAudioSession.sharedInstance().setActive(true)

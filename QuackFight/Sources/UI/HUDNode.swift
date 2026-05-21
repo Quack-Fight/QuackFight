@@ -28,39 +28,48 @@ class HUDNode: SKNode {
     init(size: CGSize) {
         let halfW = size.width / 2.0
         let halfH = size.height / 2.0
-        let topInset: CGFloat = 72
-        let hpBarWidth = min(size.width * 0.37, 150)
-        let hpBarHeight = hpBarWidth * 0.278
-        let hpFillWidth = hpBarWidth * 0.62
-        let hpFillHeight = hpBarHeight * 0.42
+//        let topInset: CGFloat = 72
+//        let hpBarWidth = min(size.width * 0.37, 150)
+//        let hpBarHeight = hpBarWidth * 0.278
+//        let hpFillWidth = hpBarWidth * 0.7
+//        let hpFillHeight = hpBarHeight * 0.5
         let bottomHUDHeight = min(size.height * 0.22, 180)
-        hpFillMaxWidth = hpFillWidth
         
         // Setup HP Bars
         p1HPBarBG = SKSpriteNode(imageNamed: "GooseHPBar")
-        p1HPBarBG.size = CGSize(width: hpBarWidth, height: hpBarHeight)
-        p1HPBarBG.position = CGPoint(x: -halfW + hpBarWidth / 2 + 24, y: halfH - topInset)
+//        p1HPBarBG.size = CGSize(width: hpBarWidth, height: hpBarHeight)
+//        p1HPBarBG.position = CGPoint(x: -halfW + hpBarWidth / 2 + 24, y: halfH - topInset)
+        p1HPBarBG.position = CGPoint(x: -halfW + 95, y:halfH - 80)
+        p1HPBarBG.setScale(0.3)
         p1HPBarBG.zPosition = 900
         
         p2HPBarBG = SKSpriteNode(imageNamed: "DuckHPBar")
-        p2HPBarBG.size = CGSize(width: hpBarWidth, height: hpBarHeight)
-        p2HPBarBG.position = CGPoint(x: halfW - hpBarWidth / 2 - 24, y: halfH - topInset)
+//        p2HPBarBG.size = CGSize(width: hpBarWidth, height: hpBarHeight)
+//        p2HPBarBG.position = CGPoint(x: halfW - hpBarWidth / 2 - 24, y: halfH - topInset)
+        p2HPBarBG.position = CGPoint(x: halfW - 95, y: halfH - 80)
+        p2HPBarBG.setScale(0.3)
         p2HPBarBG.zPosition = 900
         
-        p1HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: hpFillWidth, height: hpFillHeight))
+//        p1HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: hpFillWidth, height: hpFillHeight))
+        p1HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: 140, height: 30))
         p1HPFill.anchorPoint = CGPoint(x: 0, y: 0.5)
-        p1HPFill.position = CGPoint(x: p1HPBarBG.position.x - hpFillWidth * 0.43, y: p1HPBarBG.position.y - 2)
+//        p1HPFill.position = CGPoint(x: p1HPBarBG.position.x - hpFillWidth * 0.35, y: p1HPBarBG.position.y - 4.5)
+        p1HPFill.position = CGPoint(x: p1HPBarBG.position.x - 50, y: p1HPBarBG.position.y - 5)
         p1HPFill.zPosition = 899
         
-        p2HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: hpFillWidth, height: hpFillHeight))
+//        p2HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: hpFillWidth, height: hpFillHeight))
+        p2HPFill = SKSpriteNode(color: .systemGreen, size: CGSize(width: 140, height: 30))
         p2HPFill.anchorPoint = CGPoint(x: 1, y: 0.5)
-        p2HPFill.position = CGPoint(x: p2HPBarBG.position.x + hpFillWidth * 0.43, y: p2HPBarBG.position.y - 2)
+//        p2HPFill.position = CGPoint(x: p2HPBarBG.position.x + hpFillWidth * 0.35, y: p2HPBarBG.position.y - 4.5)
+        p2HPFill.position = CGPoint(x: p2HPBarBG.position.x + 50, y: p2HPBarBG.position.y - 5)
         p2HPFill.zPosition = 899
         
         // Round Cycle
         roundCycle = SKSpriteNode(imageNamed: "Cycle1")
-        roundCycle.size = CGSize(width: 80, height: 80)
-        roundCycle.position = CGPoint(x: 0, y: halfH - topInset - 8)
+//        roundCycle.size = CGSize(width: 50, height: 50)
+//        roundCycle.position = CGPoint(x: 0, y: halfH - topInset - 8)
+        roundCycle.position = CGPoint(x: 0, y: halfH - 90)
+        roundCycle.setScale(0.2)
         roundCycle.zPosition = 901
         
         // Setup Round Label (shows current round number, updated dynamically)
@@ -72,16 +81,37 @@ class HUDNode: SKNode {
         roundLabel.position = roundCycle.position
         roundLabel.zPosition = 902
         
+        // Group Top HUD Position
+        let modifyX: CGFloat = 0
+        let modifyY: CGFloat = -10
+        p1HPBarBG.position.x += modifyX
+        p2HPBarBG.position.x += modifyX
+        p1HPFill.position.x += modifyX
+        p2HPFill.position.x += modifyX
+        roundCycle.position.x += modifyX
+        roundLabel.position.x += modifyX
+        p1HPBarBG.position.y += modifyY
+        p2HPBarBG.position.y += modifyY
+        p1HPFill.position.y += modifyY
+        p2HPFill.position.y += modifyY
+        roundCycle.position.y += modifyY
+        roundLabel.position.y += modifyY
+        
         // Setup Bottom HUD
         bottomBackground = SKSpriteNode(imageNamed: "BottomHUDBackground")
         bottomBackground.size = CGSize(width: size.width, height: bottomHUDHeight)
         bottomBackground.position = CGPoint(x: 0, y: -halfH + bottomHUDHeight / 2)
+//        bottomBackground.position = CGPoint(x: 0, y: -halfH + bottomBackground.size.height / 4)
+//        bottomBackground.setScale(0.5)
         bottomBackground.zPosition = 900
         
         timerBar = SKSpriteNode(imageNamed: "BottomHUDTimerBar")
         timerBar.anchorPoint = CGPoint(x: 0, y: 0.5)
         timerBar.size = CGSize(width: size.width, height: bottomHUDHeight)
         timerBar.position = CGPoint(x: -halfW, y: bottomBackground.position.y)
+//        timerBar.anchorPoint = CGPoint(x: 0, y: 0.5)
+//        timerBar.position = CGPoint(x: bottomBackground.position.x, y: bottomBackground.position.y)
+//        timerBar.setScale(0.5)
         timerBar.zPosition = 901
         
         // Setup Active Glows (Pulsing circles behind avatars)
@@ -89,15 +119,17 @@ class HUDNode: SKNode {
         p1Glow.fillColor = .systemYellow
         p1Glow.strokeColor = .clear
         p1Glow.alpha = 0.0
-        p1Glow.position = CGPoint(x: p1HPBarBG.position.x - hpBarWidth * 0.45, y: p1HPBarBG.position.y)
+        p1Glow.position = CGPoint(x: p1HPBarBG.position.x - 120, y: p1HPBarBG.position.y)
         p1Glow.zPosition = 898
         
         p2Glow = SKShapeNode(circleOfRadius: 38)
         p2Glow.fillColor = .systemYellow
         p2Glow.strokeColor = .clear
         p2Glow.alpha = 0.0
-        p2Glow.position = CGPoint(x: p2HPBarBG.position.x + hpBarWidth * 0.45, y: p2HPBarBG.position.y)
+        p2Glow.position = CGPoint(x: p2HPBarBG.position.x + 120, y: p2HPBarBG.position.y)
         p2Glow.zPosition = 898
+        
+        hpFillMaxWidth = p1HPFill.frame.width
         
         super.init()
         

@@ -149,11 +149,20 @@ final class ThrowSystem {
         
         CameraSystem.shared.followBread()
 
+        // If 2x damage skill is active, add a 2-frame looping animation to the projectile.
+        if let activeSkill = player.component(ofType: SkillComponent.self)?.activeSkill,
+           activeSkill == .damageMultiplier,
+           let spriteNode = projectile.component(ofType: SpriteComponent.self)?.node {
+            let baseName = projectileBaseName(for: player)
+            let frame1 = SKTexture(imageNamed: "\(baseName)1")
+            let frame2 = SKTexture(imageNamed: "\(baseName)2")
+            let loop = SKAction.repeatForever(
+                SKAction.animate(with: [frame1, frame2], timePerFrame: 0.15)
+            )
+            spriteNode.run(loop, withKey: "skill1Loop")
+        }
+
         // Umumkan bahwa throw sudah dimulai.
-        //
-        // AudioManager bisa play throw SFX.
-        // UISystem bisa hide power bar.
-        // System lain yang butuh tahu bahwa projectile sudah spawn bisa bereaksi di sini.
         EventBus.shared.post(.throwStarted)
     }
 
@@ -200,19 +209,25 @@ final class ThrowSystem {
     /// Rule:
     /// - Damage 10 memakai bread.
     /// - Damage 15 memakai toaster.
-    /// - Damage Multiplier memakai versi Skill1.
+    /// - Damage Multiplier memakai versi Skill1 (frame 1 as initial sprite).
     private func projectileImageName(for player: PlayerEntity) -> String {
-        let currentDamage = DamageCycleManager.shared.currentDamage
-        let isToasterCycle = currentDamage == 15
-
+        let baseName = projectileBaseName(for: player)
         let activeSkill = player.component(ofType: SkillComponent.self)?.activeSkill
-        let isDamageMultiplierActive = activeSkill == .damageMultiplier
-
-        if isDamageMultiplierActive {
-            return isToasterCycle ? "Skill1Toaster" : "Skill1Bread"
-        } else {
-            return isToasterCycle ? "BaseToaster" : "BaseBread"
+        if activeSkill == .damageMultiplier {
+            return "\(baseName)1"  // Start on frame 1; the loop animation handles the rest.
         }
+        return baseName
+    }
+
+    /// Returns the base asset prefix for the current cycle + skill state.
+    /// Used by both `projectileImageName` (initial frame) and the loop animation (frames 1+2).
+    private func projectileBaseName(for player: PlayerEntity) -> String {
+        let isToasterCycle = DamageCycleManager.shared.currentDamage == 15
+        let activeSkill = player.component(ofType: SkillComponent.self)?.activeSkill
+        if activeSkill == .damageMultiplier {
+            return isToasterCycle ? "Skill1Toaster" : "Skill1Bread"
+        }
+        return isToasterCycle ? "BaseToaster" : "BaseBread"
     }
 
     // MARK: - System Lifecycle

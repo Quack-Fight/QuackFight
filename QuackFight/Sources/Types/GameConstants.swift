@@ -171,4 +171,9 @@ enum GameConstants {
     /// The closest layer (Background8) always has factor 1.0.
     /// Intermediate layers are linearly interpolated between these values.
     static let parallaxMinFactor: CGFloat = 0.1
+
+    /// Size multiplier for the farthest background layer.
+    /// Distant layers are scaled larger so they don't appear "cropped/zoomed in"
+    /// when parallax offsets them. The closest layer is always 1.0×.
+    static let parallaxDistantScale: CGFloat = 1.0
 }

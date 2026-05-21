@@ -51,10 +51,16 @@ final class CameraSystem {
     /// Durasi preview pan dari P2 ke P1.
     private let previewPanDuration: TimeInterval = 2.5
 
+    /// Duration of the pause at the enemy position before panning back.
+    private let previewPauseDuration: TimeInterval = 1.0
+
     // MARK: - State
 
     /// Progress waktu untuk preview pan.
     private var panProgress: TimeInterval = 0.0
+
+    /// Countdown timer for the pause-at-player state.
+    private var pauseTimer: TimeInterval = 0.0
 
 
 
@@ -65,9 +71,11 @@ final class CameraSystem {
     /// Called by `PreviewPanState.didEnter`.
     func startPreviewPan() {
         guard let cameraComp = currentCameraComponent() else { return }
-        // Snap to P2 so the pan begins from the correct side.
+        // Snap to P2 so the preview begins from the opponent's side.
         cameraComp.node.position = playerCameraTarget(index: 1)
-        cameraComp.state = .previewPan
+        // Pause at P2 for 1 second before panning back to P1.
+        pauseTimer = previewPauseDuration
+        cameraComp.state = .pauseAtPlayer(index: 1)
     }
 
     /// Mengubah camera ke mode mengikuti projectile.
@@ -115,6 +123,17 @@ final class CameraSystem {
                 to: target,
                 t: cameraPlayerLerp
             ))
+
+        case .pauseAtPlayer(let index):
+            // Hold the camera still on this player, counting down.
+            let target = playerCameraTarget(index: index)
+            cameraNode.position = clampedCameraPosition(target)
+            pauseTimer -= deltaTime
+            if pauseTimer <= 0 {
+                // Pause complete — begin the pan to P1.
+                cameraComp.state = .previewPan
+                panProgress = 0.0
+            }
 
         case .previewPan:
             let p1Target = playerCameraTarget(index: 0)
@@ -210,5 +229,52 @@ final class CameraSystem {
         let y = min(target.y, topY)
 
         return CGPoint(x: x, y: y)
+    }
+
+    // MARK: - Cinematic Effects
+
+    /// Smooth pan the camera to the opponent player's position.
+    /// Used by FixedHitResolveState for the cinematic missile sequence.
+    func panToOpponent(completion: @escaping () -> Void) {
+        let opponentIndex = GameManager.shared.nextPlayerIndex
+        let target = playerCameraTarget(index: opponentIndex)
+
+        guard let cameraComp = currentCameraComponent() else {
+            completion()
+            return
+        }
+
+        let move = SKAction.move(to: target, duration: 0.8)
+        move.timingMode = .easeInEaseOut
+        cameraComp.node.run(move) {
+            cameraComp.state = .staticOnPlayer(index: opponentIndex)
+            completion()
+        }
+    }
+
+    /// Shake the camera to create an impact effect.
+    /// Intensity = max offset in points, duration = total shake time.
+    func shakeCamera(intensity: CGFloat = 12, duration: TimeInterval = 0.4) {
+        guard let cameraComp = currentCameraComponent() else { return }
+        let node = cameraComp.node
+        let originalPos = node.position
+
+        let shakeCount = 6
+        let interval = duration / Double(shakeCount)
+        var actions: [SKAction] = []
+
+        for i in 0..<shakeCount {
+            // Decay intensity over time
+            let decay = CGFloat(1.0 - Double(i) / Double(shakeCount))
+            let offsetX = CGFloat.random(in: -intensity...intensity) * decay
+            let offsetY = CGFloat.random(in: -intensity...intensity) * decay
+            let shakePoint = CGPoint(x: originalPos.x + offsetX, y: originalPos.y + offsetY)
+            actions.append(SKAction.move(to: shakePoint, duration: interval))
+        }
+
+        // Snap back to original position
+        actions.append(SKAction.move(to: originalPos, duration: interval / 2))
+
+        node.run(SKAction.sequence(actions))
     }
 }

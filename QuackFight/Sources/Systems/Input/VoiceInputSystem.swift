@@ -128,17 +128,12 @@ final class VoiceInputSystem: GKComponentSystem<InputStateComponent> {
     private func startListening() {
         guard !isActive else { return }
 
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .mixWithOthers])
-            try session.setActive(true)
-        } catch {
-            print("VoiceInputSystem: failed to configure audio session - \(error)")
-            return
-        }
-
         hasReceivedAudioData = false
         smoothedPower = minimumPower
+
+        // Mark active before dispatching to background to prevent a second
+        // activate() call sneaking in while audioEngine.start() is in flight.
+        isActive = true
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
@@ -169,13 +164,23 @@ final class VoiceInputSystem: GKComponentSystem<InputStateComponent> {
             }
         }
 
-        do {
-            try audioEngine.start()
-            isActive = true
-            writeLivePower(minimumPower)
-        } catch {
-            print("VoiceInputSystem: failed to start audio engine - \(error)")
-            deactivate()
+        // audioEngine.start() melibatkan inisialisasi hardware audio dan bisa
+        // memblok main thread beberapa milidetik — pindahkan ke background.
+        // Session sudah dikonfigurasi oleh AudioManager sejak awal game.
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            do {
+                try self.audioEngine.start()
+                DispatchQueue.main.async {
+                    self.writeLivePower(self.minimumPower)
+                }
+            } catch {
+                print("VoiceInputSystem: failed to start audio engine - \(error)")
+                DispatchQueue.main.async {
+                    self.isActive = false
+                    self.audioEngine.inputNode.removeTap(onBus: 0)
+                }
+            }
         }
     }
 
@@ -187,7 +192,7 @@ final class VoiceInputSystem: GKComponentSystem<InputStateComponent> {
 
         audioEngine.inputNode.removeTap(onBus: 0)
         audioEngine.stop()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        // Audio session lifecycle is owned by AudioManager — do not deactivate here.
         isActive = false
     }
 
