@@ -119,14 +119,14 @@ class HUDNode: SKNode {
         p1Glow.fillColor = .systemYellow
         p1Glow.strokeColor = .clear
         p1Glow.alpha = 0.0
-        p1Glow.position = CGPoint(x: p1HPBarBG.position.x - 120, y: p1HPBarBG.position.y)
+        p1Glow.position = CGPoint(x: p1HPBarBG.position.x - hpBarWidth * 0.45, y: p1HPBarBG.position.y)
         p1Glow.zPosition = 898
         
         p2Glow = SKShapeNode(circleOfRadius: 38)
         p2Glow.fillColor = .systemYellow
         p2Glow.strokeColor = .clear
         p2Glow.alpha = 0.0
-        p2Glow.position = CGPoint(x: p2HPBarBG.position.x + 120, y: p2HPBarBG.position.y)
+        p2Glow.position = CGPoint(x: p2HPBarBG.position.x + hpBarWidth * 0.45, y: p2HPBarBG.position.y)
         p2Glow.zPosition = 898
         
         hpFillMaxWidth = p1HPFill.frame.width
