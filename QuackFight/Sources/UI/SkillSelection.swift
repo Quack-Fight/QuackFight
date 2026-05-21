@@ -23,7 +23,7 @@ class SkillSelection: SKNode {
         container.zPosition = 902
         
         // Position container at bottom HUD area
-        container.position = CGPoint(x: 0, y: -size.height / 2.0 + bottomHUDHeight * 0.42)
+        container.position = CGPoint(x: 0, y: -size.height / 2.0 + bottomHUDHeight * 0.52)
         
         super.init()
         addChild(container)

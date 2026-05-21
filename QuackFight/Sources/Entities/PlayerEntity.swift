@@ -155,4 +155,11 @@ class PlayerEntity: GKEntity {
             hand.zRotation = -CGFloat(angle)
         }
     }
+
+    /// Show or hide the hand sprite.
+    /// Used during skill animations (Heal, Fixed Hit) where the body texture
+    /// changes to animation frames and the hand would look out of place.
+    func setHandVisible(_ visible: Bool) {
+        handNode?.isHidden = !visible
+    }
 }
