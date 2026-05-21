@@ -43,13 +43,13 @@ enum GameConstants {
     // MARK: - Scene Layout
 
     /// Vertical offset from the bottom where Player 1 stands.
-    static let player1YPosition: CGFloat = 150
+    static let player1YPosition: CGFloat = 180
 
     /// Vertical offset from the bottom where Player 2 stands.
-    static let player2YPosition: CGFloat = 150
+    static let player2YPosition: CGFloat = 180
 
     /// Horizontal inset from the screen edge for player placement.
-    static let playerXInset: CGFloat = 300
+    static let playerXInset: CGFloat = 200
 
     /// Vertical offset applied to the camera when it focuses on a player.
     /// Negative = camera looks lower, Positive = camera looks higher.
@@ -155,6 +155,10 @@ enum GameConstants {
     static let defaultHitBoxRadius: CGFloat = 20.0
 
     // MARK: - Background / World
+
+    /// When `true`, the game uses 8 parallax layers (Background1…Background8).
+    /// When `false`, a single "BackgroundMain" image is used with no parallax shift.
+    static let useParallaxBackground: Bool = false
 
     /// The game world spans this many viewport widths horizontally.
     /// 6 screens gives enough room for high-arc artillery throws.

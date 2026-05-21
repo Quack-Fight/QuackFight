@@ -43,10 +43,12 @@ class SkillComponent: GKComponent {
         availableSkills.contains(skill)
     }
 
-    /// Attempt to activate a skill. Returns `true` on success, `false` if already used.
+    /// Attempt to activate a skill. Returns `true` on success, `false` if already used
+    /// or if another skill is already active for this turn.
     /// The skill is immediately removed from `availableSkills` upon activation.
     @discardableResult
     func activate(_ skill: SkillType) -> Bool {
+        guard activeSkill == nil else { return false }  // block if a skill is already active
         guard availableSkills.contains(skill) else { return false }
         activeSkill = skill
         availableSkills.remove(skill)

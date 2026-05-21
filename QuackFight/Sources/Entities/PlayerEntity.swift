@@ -65,7 +65,20 @@ class PlayerEntity: GKEntity {
         // HUDNode uses GooseHPBar for P1 and DuckHPBar for P2, confirming this mapping.
         let imageName = playerIndex == 0 ? "BaseGoose" : "BaseDuck"
         let spriteComp = SpriteComponent(imageName: imageName)
-        spriteComp.node.size = CGSize(width: 170, height: 170)
+        let targetHeight: CGFloat = 300
+
+        if let texture = spriteComp.node.texture {
+            let nativeSize = texture.size()
+            // Formula: (Original Width / Original Height) * Target Height
+            let autoWidth = (nativeSize.width / nativeSize.height) * targetHeight
+
+            spriteComp.node.size = CGSize(width: autoWidth, height: targetHeight)
+        } else {
+            // Fallback in case the texture hasn't loaded yet or isn't found
+            spriteComp.node.size = CGSize(width: targetHeight, height: targetHeight)
+        }
+
+        
         spriteComp.node.zPosition = 1
         scene.addChild(spriteComp.node)
         addComponent(spriteComp)
@@ -107,18 +120,18 @@ class PlayerEntity: GKEntity {
         // Scale to be proportional with the 170px body.
         // Original aspect ratio: 513:281 ≈ 1.83:1
         let handWidth: CGFloat = 90
-        let handHeight: CGFloat = handWidth / 1.83
+        let handHeight: CGFloat = handWidth / 2
         hand.size = CGSize(width: handWidth, height: handHeight)
 
         // Anchor at the shoulder joint so rotation pivots from the body connection point.
         if playerIndex == 0 {
             // Goose faces right — shoulder is at the left edge of the hand sprite.
             hand.anchorPoint = CGPoint(x: 0, y: 0.5)
-            hand.position = CGPoint(x: 20, y: 15)
+            hand.position = CGPoint(x: 20, y: 0)
         } else {
             // Duck faces left — shoulder is at the right edge of the hand sprite.
             hand.anchorPoint = CGPoint(x: 1, y: 0.5)
-            hand.position = CGPoint(x: -20, y: 15)
+            hand.position = CGPoint(x: -10, y: 0)
         }
 
         hand.zPosition = -1  // Behind the body so the wing appears underneath
