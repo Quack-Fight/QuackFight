@@ -61,8 +61,14 @@ final class AimState: GKState {
         GyroscopeSystem.shared.activate()
         EventBus.shared.post(.showInstruction("Tilt to Aim"))
 
-        // Enable tap-to-lock so TapInputSystem posts .aimLocked on touch.
-        GameManager.shared.tapContext = .aiming
+        // Delay tap-to-lock until the instruction overlay has auto-hidden (~1.5s).
+        // This prevents the player from accidentally tapping the overlay and skipping
+        // straight to PowerState before they even had a chance to aim.
+        // The gyroscope and timer still run during the delay — only the tap is deferred.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            guard self != nil else { return }  // state already exited (skill used, etc.)
+            GameManager.shared.tapContext = .aiming
+        }
 
         // Start the 5-second aim timer (TurnSystem posts .timerTick + .aimLocked on timeout).
         TurnSystem.shared.startAimTimer()

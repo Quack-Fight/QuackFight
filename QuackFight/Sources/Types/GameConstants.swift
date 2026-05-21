@@ -65,7 +65,7 @@ enum GameConstants {
     /// Maximum custom projectile velocity at 100% power.
     /// Used by PhysicsEngine.calculateVelocity().
     /// Playtest tuning value.
-    static let maxVelocity: CGFloat = 1200.0
+    static let maxVelocity: CGFloat = 1800.0
 
     /// Custom deterministic gravity used by PhysicsEngine trajectory simulation.
     /// Playtest tuning value.
