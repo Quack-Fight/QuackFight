@@ -97,6 +97,21 @@ final class FixedHitResolveState: GKState {
 
     /// Play 4-frame missile launch animation on the active player (0.8s total).
     private func phase1_launchAnimation() {
+        // Phase 1 SFX:
+        // - skill2Click = feedback saat skill Fixed Hit dipilih / tombol ditekan
+        // - beep = lock-on / warning beep sebelum missile cinematic
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+
+                AudioManager.shared.playSFX(.skill2ClickFix)
+
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.48) {
+
+                AudioManager.shared.playSFX(.beepFix)
+
+            }
+
         let activePlayer = GameManager.shared.activePlayer
         let playerIndex = GameManager.shared.activePlayerIndex
 
@@ -108,10 +123,8 @@ final class FixedHitResolveState: GKState {
         let spriteNode = spriteComp.node
         let originalTexture = spriteNode.texture
 
-        // Hide the hand during launch animation.
         activePlayer.setHandVisible(false)
 
-        // Build 4-frame missile launch textures.
         let prefix = playerIndex == 0 ? "Goose_Missile" : "Duck_Missile"
         let textures = (1...4).map { SKTexture(imageNamed: "\(prefix)-\($0)") }
 
@@ -154,10 +167,13 @@ final class FixedHitResolveState: GKState {
     /// Spawn a missile above the opponent and animate it dropping down.
     /// Screen shake + damage on impact.
     private func phase3_missileDrop() {
+        // Phase 3 SFX:
+        // skill3Full already contains missile drop + explosion sound,
+        // so it starts when the missile begins falling.
+        AudioManager.shared.playSFX(.skill3Full)
         let opponent = GameManager.shared.opponentPlayer
         guard let opponentTransform = opponent.component(ofType: TransformComponent.self),
               let scene = GameManager.shared.scene else {
-            // Fallback: apply damage directly.
             FixedHitSystem.shared.applyFixedHit()
             return
         }

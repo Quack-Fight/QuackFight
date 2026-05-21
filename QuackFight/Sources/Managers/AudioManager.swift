@@ -119,9 +119,9 @@ final class AudioManager: NSObject {
                 break
 
             case .fixedHit:
-                self?.playSFX(.explosion)
+                    break
+                }
             }
-        }
 
         EventBus.shared.subscribe(.gameOver) { [weak self] _ in
             self?.stopSkill1Loop()
@@ -337,15 +337,17 @@ final class AudioManager: NSObject {
 /// - throw.wav
 /// - toasterImpact.wav
 enum SoundEffect: String, CaseIterable {
+    case beepFix
     case breadImpactFix
     case buttonClick
-    case explosion
     case heal
     case laugh
     case quackAngry
     case quackSfx
     case skill1
+    case skill2ClickFix
     case skill2Fix
+    case skill3Full
     case `throw`
     case toasterImpact
 
