@@ -93,37 +93,48 @@ class GameScene: SKScene {
         // 1. World is multiple phone screens wide.
         playableWorldWidth = viewportWidth * GameConstants.worldScreenMultiplier
 
-        // 2. Auto-calculate height from the background's native aspect ratio.
-        let sampleTexture = SKTexture(imageNamed: "Background1")
-        let aspectRatio = sampleTexture.size().height / sampleTexture.size().width
-        playableWorldHeight = playableWorldWidth * aspectRatio
+        if GameConstants.useParallaxBackground {
+            // PARALLAX MODE: 8 layers (Background1…Background8), back to front.
 
-        // 3. Stack all 8 parallax layers, back to front.
-        //    Layer 1 = farthest (sky), Layer 8 = closest (ground/foreground).
-        //    Distant layers are scaled larger so they don’t appear “zoomed in”
-        //    when parallax position offsets show a different portion of the image.
-        backgroundLayers.removeAll()
-        let count = GameConstants.backgroundLayerCount
-        for i in 1...count {
-            let layer = SKSpriteNode(imageNamed: "Background\(i)")
+            // Auto-calculate height from the farthest layer's native aspect ratio.
+            let sampleTexture = SKTexture(imageNamed: "Background1")
+            let aspectRatio = sampleTexture.size().height / sampleTexture.size().width
+            playableWorldHeight = playableWorldWidth * aspectRatio
 
-            // t=0 for Background1 (farthest), t=1 for Background8 (closest).
-//            let t = count > 1 ? CGFloat(i - 1) / CGFloat(count - 1) : 1.0
-            let t = 0.0
-            // Farthest layer gets parallaxDistantScale (1.3×), closest gets 1.0×.
-//            let sizeScale = GameConstants.parallaxDistantScale
-//                + (1.0 - GameConstants.parallaxDistantScale) * t
-            let sizeScale: CGFloat = 1.0
-            let layerWidth = playableWorldWidth * sizeScale
-            let layerHeight = playableWorldHeight * sizeScale
-            layer.size = CGSize(width: layerWidth, height: layerHeight)
+            // Stack all 8 parallax layers, back to front.
+            //    Layer 1 = farthest (sky), Layer 8 = closest (ground/foreground).
+            backgroundLayers.removeAll()
+            let count = GameConstants.backgroundLayerCount
+            for i in 1...count {
+                let layer = SKSpriteNode(imageNamed: "Background\(i)")
 
-            // Anchor at center so the larger layers extend equally on all sides.
-            layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            layer.position = CGPoint(x: playableWorldWidth / 2, y: playableWorldHeight / 2)
-            layer.zPosition = GameConstants.backgroundBaseZPosition + CGFloat(i)
-            addChild(layer)
-            backgroundLayers.append(layer)
+                let sizeScale: CGFloat = 1.0
+                let layerWidth = playableWorldWidth * sizeScale
+                let layerHeight = playableWorldHeight * sizeScale
+                layer.size = CGSize(width: layerWidth, height: layerHeight)
+
+                // Anchor at center so the larger layers extend equally on all sides.
+                layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                layer.position = CGPoint(x: playableWorldWidth / 2, y: playableWorldHeight / 2)
+                layer.zPosition = GameConstants.backgroundBaseZPosition + CGFloat(i)
+                addChild(layer)
+                backgroundLayers.append(layer)
+            }
+        } else {
+            // NON-PARALLAX MODE: single BackgroundMain image, no layer array needed.
+
+            // Auto-calculate height from BackgroundMain's native aspect ratio.
+            let sampleTexture = SKTexture(imageNamed: "BackgroundMain")
+            let aspectRatio = sampleTexture.size().height / sampleTexture.size().width
+            playableWorldHeight = playableWorldWidth * aspectRatio
+
+            let bg = SKSpriteNode(imageNamed: "BackgroundMain")
+            bg.size = CGSize(width: playableWorldWidth, height: playableWorldHeight)
+            bg.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            bg.position = CGPoint(x: playableWorldWidth / 2, y: playableWorldHeight / 2)
+            bg.zPosition = GameConstants.backgroundBaseZPosition
+            addChild(bg)
+            // backgroundLayers stays empty — updateParallax() will no-op.
         }
     }
 
@@ -131,8 +142,13 @@ class GameScene: SKScene {
 
     /// Updates parallax layer positions based on the current camera position.
     ///
+    /// No-ops when `GameConstants.useParallaxBackground` is `false`
+    /// (the single BackgroundMain sprite is part of the scene graph and moves
+    /// automatically with the world — no manual offset needed).
+    ///
     /// Called every frame after CameraSystem has moved the camera.
     private func updateParallax() {
+        guard GameConstants.useParallaxBackground else { return }
         guard let cameraNode = self.camera else { return }
 
         let cameraPos = cameraNode.position

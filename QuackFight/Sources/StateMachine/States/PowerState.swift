@@ -49,8 +49,14 @@ final class PowerState: GKState {
         VoiceInputSystem.shared.activate()
         EventBus.shared.post(.showInstruction("Shout!"))
 
-        // Enable tap-to-lock so TapInputSystem posts .powerLocked on touch.
-        GameManager.shared.tapContext = .power
+        // Delay tap-to-lock until the instruction overlay has auto-hidden (~1.5s).
+        // This prevents the player from accidentally tapping the overlay and skipping
+        // straight to ThrowResolveState before they even had a chance to shout.
+        // The microphone and timer still run during the delay — only the tap is deferred.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard self != nil else { return }  // state already exited (skill used, etc.)
+            GameManager.shared.tapContext = .power
+        }
 
         // Start the 5-second power timer (TurnSystem posts .timerTick + .powerLocked on timeout).
         TurnSystem.shared.startPowerTimer()

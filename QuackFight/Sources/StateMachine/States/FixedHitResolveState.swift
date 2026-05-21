@@ -182,7 +182,8 @@ final class FixedHitResolveState: GKState {
 
         // Create missile sprite with 2-frame loop animation.
         let missile = SKSpriteNode(imageNamed: "FixedHitMissile1")
-        missile.size = CGSize(width: 80, height: 80)
+        missile.size = CGSize(width: 400, height: 400)
+        missile.yScale = -1
         missile.zPosition = 50
         missile.position = CGPoint(x: targetPos.x, y: targetPos.y + 500)
         scene.addChild(missile)
@@ -265,7 +266,10 @@ final class FixedHitResolveState: GKState {
             dimOverlay = nil
         }
 
-        // Return camera to the next active player
-        CameraSystem.shared.returnToPlayer(index: GameManager.shared.activePlayerIndex)
+        // Return camera to the next active player (the opponent who was just hit).
+        // The camera is already on the opponent from phase 2's pan, and the opponent
+        // becomes the new active player after TurnHandoffState.switchPlayer().
+        // Using nextPlayerIndex avoids the awkward snap-back to the attacker.
+        CameraSystem.shared.returnToPlayer(index: GameManager.shared.nextPlayerIndex)
     }
 }

@@ -95,7 +95,7 @@ final class TrajectoryRenderSystem {
         let facing = activePlayer.facing  // +1 for Goose, -1 for Duck
 
         // 3. Rotate the player's hand to match the aim angle
-        activePlayer.setHandAngle(liveAngle - 0.27)
+        activePlayer.setHandAngle(liveAngle - 0.17)
         
         // 4. Calculate the aim direction vector
         //    Goose (facing +1): aims right → (cos(angle), sin(angle))
