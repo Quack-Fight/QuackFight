@@ -56,6 +56,8 @@ enum TapContext {
 enum CameraState {
     /// Camera is pinned exactly on the player at the given index.
     case staticOnPlayer(index: Int)
+    /// Camera holds still on the player for a timed pause (e.g. preview pan start).
+    case pauseAtPlayer(index: Int)
     /// Camera pans from Player 2 → Player 1 during round-start preview.
     case previewPan
     /// Camera lerps toward the bread entity while it is in flight.

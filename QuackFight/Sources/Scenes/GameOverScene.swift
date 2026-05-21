@@ -51,13 +51,13 @@ class GameOverScene: SKSpriteNode {
             let characterName = winner == 0 ? "GOOSE" : "DUCK"
             titleText = "\(characterName)"
             subtitleText = "By Knockout (K.O.)"
-            titleColor = winner == 0 ? .yellowQuack : .systemRed
+            titleColor = .yellowQuack
             
         case .roundCapWin(let winner):
             let characterName = winner == 0 ? "GOOSE" : "DUCK"
             titleText = "\(characterName)"
             subtitleText = "Round Cap Reached"
-            titleColor = winner == 0 ? .yellowQuack : .systemRed
+            titleColor = .yellowQuack
             
         case .draw:
             titleText = "DRAW!"

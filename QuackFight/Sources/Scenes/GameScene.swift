@@ -98,16 +98,30 @@ class GameScene: SKScene {
         let aspectRatio = sampleTexture.size().height / sampleTexture.size().width
         playableWorldHeight = playableWorldWidth * aspectRatio
 
-        // 3. Stack all parallax layers, back to front.
+        // 3. Stack all 8 parallax layers, back to front.
+        //    Layer 1 = farthest (sky), Layer 8 = closest (ground/foreground).
+        //    Distant layers are scaled larger so they don’t appear “zoomed in”
+        //    when parallax position offsets show a different portion of the image.
         backgroundLayers.removeAll()
-
-        for i in 1...GameConstants.backgroundLayerCount {
+        let count = GameConstants.backgroundLayerCount
+        for i in 1...count {
             let layer = SKSpriteNode(imageNamed: "Background\(i)")
-            layer.size = CGSize(width: playableWorldWidth, height: playableWorldHeight)
-            layer.anchorPoint = CGPoint(x: 0, y: 0)
-            layer.position = .zero
-            layer.zPosition = GameConstants.backgroundBaseZPosition + CGFloat(i)
 
+            // t=0 for Background1 (farthest), t=1 for Background8 (closest).
+//            let t = count > 1 ? CGFloat(i - 1) / CGFloat(count - 1) : 1.0
+            let t = 0.0
+            // Farthest layer gets parallaxDistantScale (1.3×), closest gets 1.0×.
+//            let sizeScale = GameConstants.parallaxDistantScale
+//                + (1.0 - GameConstants.parallaxDistantScale) * t
+            let sizeScale: CGFloat = 1.0
+            let layerWidth = playableWorldWidth * sizeScale
+            let layerHeight = playableWorldHeight * sizeScale
+            layer.size = CGSize(width: layerWidth, height: layerHeight)
+
+            // Anchor at center so the larger layers extend equally on all sides.
+            layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            layer.position = CGPoint(x: playableWorldWidth / 2, y: playableWorldHeight / 2)
+            layer.zPosition = GameConstants.backgroundBaseZPosition + CGFloat(i)
             addChild(layer)
             backgroundLayers.append(layer)
         }
@@ -137,8 +151,12 @@ class GameScene: SKScene {
             let factor = GameConstants.parallaxMinFactor
                 + (1.0 - GameConstants.parallaxMinFactor) * t
 
-            layer.position.x = offsetX * (1.0 - factor)
-            layer.position.y = offsetY * (1.0 - factor)
+            // Each layer is centered at the world center.
+            // Shift it by the camera offset scaled by (1 - factor).
+            // factor=1.0 (closest) → no shift (moves with camera).
+            // factor=0.1 (farthest) → large shift (moves much less).
+            layer.position.x = worldCenterX + offsetX * (1.0 - factor)
+            layer.position.y = worldCenterY + offsetY * (1.0 - factor)
         }
     }
 
