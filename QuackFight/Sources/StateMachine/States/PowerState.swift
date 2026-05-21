@@ -53,7 +53,7 @@ final class PowerState: GKState {
         // This prevents the player from accidentally tapping the overlay and skipping
         // straight to ThrowResolveState before they even had a chance to shout.
         // The microphone and timer still run during the delay — only the tap is deferred.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
             guard self != nil else { return }  // state already exited (skill used, etc.)
             GameManager.shared.tapContext = .power
         }
